@@ -17,6 +17,7 @@ Route::prefix('auth/user')->group(function () {
     Route::middleware(AuthenticateUser::class)->group(function () { // Applying user middleware
         Route::post('logout', [AuthUserController::class, 'logout']);
         Route::get('me', [AuthUserController::class, 'me']);
+        Route::post('change-password', [AuthUserController::class, 'changePassword']);
     });
 });
 
