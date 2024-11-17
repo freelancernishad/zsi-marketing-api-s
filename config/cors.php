@@ -4,7 +4,7 @@
 return [
     'paths' => ['api/*', 'sanctum/csrf-cookie'], // Add paths your frontend will call
     'allowed_methods' => ['*'], // Allow all HTTP methods (GET, POST, etc.)
-    'allowed_origins' => ['http://localhost:5173'], // Allow Vite's default URL
+    'allowed_origins' => ['http://localhost:51732'], // Allow Vite's default URL
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'], // Allow all headers
     'exposed_headers' => [],
