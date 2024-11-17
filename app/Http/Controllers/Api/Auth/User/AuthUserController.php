@@ -193,5 +193,36 @@ class AuthUserController extends Controller
     }
 
 
+    /**
+     * Check if a JWT token is valid.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkToken(Request $request)
+    {
+        $token = $request->bearerToken(); // Get the token from the Authorization header
+
+        if (!$token) {
+            return response()->json(['message' => 'Token not provided.'], 400);
+        }
+
+        try {
+            // Authenticate the token and retrieve the authenticated user
+            $user = JWTAuth::setToken($token)->authenticate();
+
+            if (!$user) {
+                return response()->json(['message' => 'Token is invalid or user not found.'], 401);
+            }
+
+            return response()->json(['message' => 'Token is valid.',], 200);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return response()->json(['message' => 'Token has expired.'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response()->json(['message' => 'Token is invalid.'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json(['message' => 'Token is missing or malformed.'], 401);
+        }
+    }
 
 }

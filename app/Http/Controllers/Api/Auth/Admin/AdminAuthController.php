@@ -194,4 +194,38 @@ class AdminAuthController extends Controller
         ], 200);
     }
 
+
+
+
+    /**
+     * Check if a JWT token is valid.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkToken(Request $request)
+    {
+        $token = $request->bearerToken(); // Get the token from the Authorization header
+
+        if (!$token) {
+            return response()->json(['message' => 'Token not provided.'], 400);
+        }
+
+        try {
+            $admin = JWTAuth::setToken($token)->authenticate();
+
+            if (!$admin) {
+                return response()->json(['message' => 'Token is invalid or admin not found.'], 401);
+            }
+
+            return response()->json(["message"=>"Token is valid"], 200);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return response()->json(['message' => 'Token has expired.'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response()->json(['message' => 'Token is invalid.'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json(['message' => 'Token is missing or invalid.'], 401);
+        }
+    }
+
 }

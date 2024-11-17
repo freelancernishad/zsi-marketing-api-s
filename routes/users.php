@@ -18,6 +18,7 @@ Route::prefix('auth/user')->group(function () {
         Route::post('logout', [AuthUserController::class, 'logout']);
         Route::get('me', [AuthUserController::class, 'me']);
         Route::post('change-password', [AuthUserController::class, 'changePassword']);
+        Route::get('check-token', [AuthUserController::class, 'checkToken']);
     });
 });
 

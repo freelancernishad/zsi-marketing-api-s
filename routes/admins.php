@@ -19,6 +19,8 @@ Route::prefix('auth/admin')->group(function () {
         Route::post('logout', [AdminAuthController::class, 'logout']);
         Route::get('me', [AdminAuthController::class, 'me']);
         Route::post('/change-password', [AdminAuthController::class, 'changePassword']);
+        Route::get('check-token', [AdminAuthController::class, 'checkToken']);
+
     });
 });
 
