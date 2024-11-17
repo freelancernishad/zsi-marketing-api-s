@@ -9,8 +9,7 @@ class CreateTokenBlacklistsTable extends Migration
     {
         Schema::create('token_blacklists', function (Blueprint $table) {
             $table->id();
-            $table->string('token', 65535);  // Change to VARCHAR(65535) if appropriate
-            $table->unique('token');         // Create a unique index
+            $table->longText('token');  // Change to VARCHAR(65535) if appropriate       // Create a unique index
             $table->timestamps();
         });
     }
