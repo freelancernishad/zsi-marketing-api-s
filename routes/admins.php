@@ -18,6 +18,7 @@ Route::prefix('auth/admin')->group(function () {
     Route::middleware(AuthenticateAdmin::class)->group(function () { // Applying admin middleware
         Route::post('logout', [AdminAuthController::class, 'logout']);
         Route::get('me', [AdminAuthController::class, 'me']);
+        Route::post('/change-password', [AdminAuthController::class, 'changePassword']);
     });
 });
 

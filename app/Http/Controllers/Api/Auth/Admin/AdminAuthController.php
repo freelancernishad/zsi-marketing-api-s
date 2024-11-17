@@ -150,4 +150,48 @@ class AdminAuthController extends Controller
             ], 500);
         }
     }
+
+     /**
+     * Change the password of the authenticated admin.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function changePassword(Request $request)
+    {
+        // Validate input using Validator
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Return validation errors if any
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Get the currently authenticated admin
+        $admin = Auth::guard('admin')->user();
+
+        // Check if the current password matches
+        if (!Hash::check($request->current_password, $admin->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password is incorrect.'
+            ], 400);
+        }
+
+        // Update the password
+        $admin->password = Hash::make($request->new_password);
+        $admin->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully.'
+        ], 200);
+    }
+
 }
