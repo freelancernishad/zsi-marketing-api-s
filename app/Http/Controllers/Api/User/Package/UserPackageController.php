@@ -54,8 +54,7 @@ class UserPackageController extends Controller
     {
         // Validation rules
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id', // Ensure the user exists
-            'currency' => 'required|string|in:USD,EUR,GBP', // Add other currencies if needed
+            'currency' => 'nullable|string|in:USD,EUR,GBP', // Add other currencies if needed
             'payable_type' => 'required|string|in:Package', // Ensure payable type is Package (extend as necessary)
             'payable_id' => 'required|exists:packages,id', // Ensure the package exists
             'addon_ids' => 'nullable|array', // Addon IDs should be an array if present
@@ -72,8 +71,8 @@ class UserPackageController extends Controller
         }
 
         // Extract validated data
-        $userId = $request->user_id;
-        $currency = $request->currency;
+        $userId = auth()->id(); // Use authenticated user's ID
+        $currency = $request->currency ?? 'USD'; // Default currency to USD
         $payableType = $request->payable_type;
         $payableId = $request->payable_id;
         $addonIds = $request->addon_ids ?? []; // Default to empty array if no addon IDs are provided
@@ -89,7 +88,7 @@ class UserPackageController extends Controller
         }
 
         // Get the discounted price based on the provided duration (discount_months)
-         $amount = $package->getDiscountedPriceAttribute($discountMonths); // Apply discount calculation
+        $amount = $package->getDiscountedPriceAttribute($discountMonths); // Apply discount calculation
 
         // Ensure amount is greater than zero after discount
         if ($amount <= 0) {
@@ -110,15 +109,14 @@ class UserPackageController extends Controller
                 'cancel_url' => $cancelUrl,
             ]);
 
-
-
-                // Return success response
-                return response()->json($paymentResult, 200);
+            // Return success response
+            return response()->json($paymentResult, 200);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Payment processing error: ' . $e->getMessage()], 500);
         }
     }
+
 
 
 
