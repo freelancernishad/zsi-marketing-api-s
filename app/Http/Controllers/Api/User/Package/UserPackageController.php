@@ -17,7 +17,7 @@ class UserPackageController extends Controller
     public function index(Request $request)
     {
         // Get the list of all packages with features, discount rate, and discounted price
-        $packages = Package::all();
+        $packages = Package::all()->makeHidden(['discounts']);
 
         // Return the list of packages with calculated discount details
         return response()->json($packages);
@@ -32,7 +32,7 @@ class UserPackageController extends Controller
     public function show($id)
     {
         // Find the package by ID
-        $package = Package::find($id);
+        $package = Package::find($id)->makeHidden(['discounts']);
 
         if (!$package) {
             return response()->json(['message' => 'Package not found'], 404);
