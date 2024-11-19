@@ -51,7 +51,7 @@ class AdminPackageController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'duration_days' => 'required|integer|min:1',
+            'duration_days' => 'nullable|integer|min:1',
             'features' => 'required|array',
             'discounts' => 'nullable|array',
             'discounts.*.duration_months' => 'required_with:discounts|integer|min:1',
@@ -65,6 +65,7 @@ class AdminPackageController extends Controller
 
         // Create the package
         $data = $request->only(['name', 'description', 'price', 'duration_days', 'features']);
+        $data['duration_days'] = 0;
         $package = Package::create($data);
 
         // Handle discounts
