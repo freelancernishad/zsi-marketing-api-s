@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Auth\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\Package\AdminPackageController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
+use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
 use App\Http\Controllers\Api\Admin\SocialMedia\AdminSocialMediaLinkController;
 
 Route::prefix('auth/admin')->group(function () {
@@ -73,6 +74,14 @@ Route::prefix('admin')->group(function () {
             Route::delete('packages/{id}', [AdminPackageController::class, 'destroy']);
         });
 
+
+        Route::prefix('/')->group(function () {
+            Route::get('package-addons/', [AdminPackageAddonController::class, 'index']); // List all addons
+            Route::post('package-addons/', [AdminPackageAddonController::class, 'store']); // Create a new addon
+            Route::get('package-addons/{id}', [AdminPackageAddonController::class, 'show']); // Get a specific addon
+            Route::put('package-addons/{id}', [AdminPackageAddonController::class, 'update']); // Update an addon
+            Route::delete('package-addons/{id}', [AdminPackageAddonController::class, 'destroy']); // Delete an addon
+        });
 
 
 
