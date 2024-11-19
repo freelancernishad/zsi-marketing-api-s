@@ -22,3 +22,38 @@ function PackageSubscribe($package_id)
 
     return response()->json(['message' => 'Successfully subscribed to the package']);
 }
+
+
+if (!function_exists('applyDiscount')) {
+    /**
+     * Apply discount based on price, duration, and available discounts.
+     *
+     * @param float $price
+     * @param int $durationMonths
+     * @param array $discounts
+     * @return array
+     */
+    function applyDiscount(float $price, int $durationMonths, array $discounts): array
+    {
+        // Default to no discount
+        $discountRate = 0;
+        $discountedPrice = $price * $durationMonths;
+
+        // Loop through the available discounts and apply the one matching the duration
+        foreach ($discounts as $discount) {
+            if ($discount['duration_months'] == $durationMonths) {
+                $discountRate = $discount['discount_rate'];
+                break;
+            }
+        }
+
+        // Calculate the discounted price
+        $discountedPrice = $discountedPrice - ($discountedPrice * ($discountRate / 100));
+
+        // Return the discount rate and discounted price
+        return [
+            'discount_rate' => $discountRate,
+            'discounted_price' => round($discountedPrice, 2)
+        ];
+    }
+}

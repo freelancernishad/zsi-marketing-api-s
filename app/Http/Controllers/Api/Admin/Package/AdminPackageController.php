@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin\Package;
 
 use App\Models\Package;
+use App\Models\PackageDiscount;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -15,8 +16,8 @@ class AdminPackageController extends Controller
      */
     public function index()
     {
-        // Fetch all packages
-        $packages = Package::all();
+        // Fetch all packages with their discounts
+        $packages = Package::with('discounts')->get();
 
         return response()->json($packages);
     }
@@ -29,7 +30,7 @@ class AdminPackageController extends Controller
      */
     public function show($id)
     {
-        $package = Package::find($id);
+        $package = Package::with('discounts')->find($id);
 
         if (!$package) {
             return response()->json(['message' => 'Package not found'], 404);
@@ -39,41 +40,45 @@ class AdminPackageController extends Controller
     }
 
     /**
-     * Create a new package.
+     * Create a new package with discounts.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-
         $rules =  [
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'duration_days' => 'required|integer|min:1',
             'features' => 'required|array',
+            'discounts' => 'nullable|array',
+            'discounts.*.duration_months' => 'required_with:discounts|integer|min:1',
+            'discounts.*.discount_rate' => 'required_with:discounts|numeric|min:0|max:100',
         ];
+
         $validationResponse = validateRequest($request->all(), $rules);
         if ($validationResponse) {
             return $validationResponse; // Return if validation fails
         }
 
-        $data = [
-            "name"=>$request->name,
-            "description"=>$request->description,
-            "price"=>$request->price,
-            "duration_days"=>$request->duration_days,
-            "features"=>$request->features,
-        ];
-        // Create and store the package
+        // Create the package
+        $data = $request->only(['name', 'description', 'price', 'duration_days', 'features']);
         $package = Package::create($data);
 
-        return response()->json($package, 201);
+        // Handle discounts
+        if ($request->has('discounts')) {
+            foreach ($request->discounts as $discount) {
+                $package->discounts()->create($discount);
+            }
+        }
+
+        return response()->json($package->load('discounts'), 201);
     }
 
     /**
-     * Update an existing package.
+     * Update an existing package and its discounts.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
@@ -87,43 +92,48 @@ class AdminPackageController extends Controller
             return response()->json(['message' => 'Package not found'], 404);
         }
 
-        // Define the validation rules
-        $rules =  [
+        $rules = [
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
             'duration_days' => 'nullable|integer|min:1',
             'features' => 'nullable|array',
+            'discounts' => 'nullable|array',
+            'discounts.*.id' => 'nullable|integer|exists:package_discounts,id',
+            'discounts.*.duration_months' => 'required_with:discounts|integer|min:1',
+            'discounts.*.discount_rate' => 'required_with:discounts|numeric|min:0|max:100',
         ];
 
-        // Validate the incoming request
         $validationResponse = validateRequest($request->all(), $rules);
         if ($validationResponse) {
             return $validationResponse; // Return if validation fails
         }
 
-        // Collect only the data that is passed in the request
+        // Update package
         $data = $request->only(['name', 'description', 'price', 'duration_days', 'features']);
+        $package->update(array_filter($data, fn ($value) => !is_null($value)));
 
-        // Remove null values to avoid overwriting them with null
-        $data = array_filter($data, function ($value) {
-            return !is_null($value);
-        });
-
-        // If no data is provided, return a validation error
-        if (empty($data)) {
-            return response()->json(['message' => 'No valid fields to update'], 400);
+        // Update discounts
+        if ($request->has('discounts')) {
+            foreach ($request->discounts as $discount) {
+                if (isset($discount['id'])) {
+                    // Update existing discount
+                    $existingDiscount = PackageDiscount::find($discount['id']);
+                    if ($existingDiscount) {
+                        $existingDiscount->update($discount);
+                    }
+                } else {
+                    // Create new discount
+                    $package->discounts()->create($discount);
+                }
+            }
         }
 
-        // Update the package details with only the fields provided in the request
-        $package->update($data);
-
-        return response()->json($package);
+        return response()->json($package->load('discounts'));
     }
 
-
     /**
-     * Delete a package.
+     * Delete a package and its discounts.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -136,10 +146,9 @@ class AdminPackageController extends Controller
             return response()->json(['message' => 'Package not found'], 404);
         }
 
-        // Delete the package
+        // Delete the package and its discounts
         $package->delete();
 
         return response()->json(['message' => 'Package deleted successfully']);
     }
 }
-

@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Api\Coupon;
 
-use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
-use App\Models\CouponAssociation;
 use Illuminate\Http\Request;
+use App\Models\CouponAssociation;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
 
 class CouponController extends Controller
 {
     // Store a new coupon
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'code' => 'required|string|unique:coupons,code',
             'type' => 'required|string|in:percentage,flat',
             'value' => 'required|numeric|min:0',
@@ -26,6 +27,11 @@ class CouponController extends Controller
             'associations.*.item_type' => 'required_with:associations|in:user,package,service',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $validated = $request->all();
         // Create the coupon
         $coupon = Coupon::create($validated);
 
@@ -49,13 +55,20 @@ class CouponController extends Controller
     // Apply coupon to a user's order
     public function apply(Request $request)
     {
-        $validated = $request->validate([
+
+        $validator = Validator::make($request->all(), [
             'coupon_code' => 'required|string|exists:coupons,code',
             'order_total' => 'required|numeric|min:0',
             'user_id' => 'nullable|exists:users,id', // Optional if the coupon applies to a specific user
             'package_id' => 'nullable|exists:packages,id', // Optional if the coupon applies to a specific package
             'service_id' => 'nullable|exists:services,id', // Optional if the coupon applies to a specific service
         ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+        $validated = $request->all();
+
 
         $coupon = Coupon::where('code', $validated['coupon_code'])->first();
 
