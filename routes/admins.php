@@ -43,7 +43,10 @@ Route::prefix('admin')->group(function () {
         });
 
         Route::prefix('coupons')->group(function () {
+            Route::get('/', [CouponController::class, 'index']);
             Route::post('/', [CouponController::class, 'store']);
+            Route::post('/{id}', [CouponController::class, 'update']);
+            Route::delete('/{id}', [CouponController::class, 'destroy']);
         });
 
         Route::prefix('transitions')->group(function () {
