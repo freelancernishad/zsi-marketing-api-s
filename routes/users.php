@@ -28,7 +28,7 @@ Route::prefix('user')->group(function () {
 ////// auth routes
 
 
-        Route::post('package/subscribe', [UserPackageController::class, 'subscribe']);
+        Route::post('package/subscribe', [UserPackageController::class, 'packagePurchase']);
 
     });
 
