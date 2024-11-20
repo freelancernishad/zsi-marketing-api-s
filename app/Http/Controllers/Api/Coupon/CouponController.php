@@ -212,16 +212,17 @@ class CouponController extends Controller
 
         // Check for valid association if item_id and item_type are provided
         if ($request->has(['item_id', 'item_type'])) {
-            $isAssociated = $coupon->associations()
+            if (!$coupon->associations->isEmpty()) {
+                $isAssociated = $coupon->associations()
                 ->where('item_id', $request->item_id)
                 ->where('item_type', $request->item_type)
                 ->exists();
-
-            if (!$isAssociated) {
-                return response()->json([
-                    'message' => 'Coupon is not valid for this item.',
-                    'coupon' => $coupon
-                ], 400);
+                if (!$isAssociated) {
+                    return response()->json([
+                        'message' => 'Coupon is not valid for this item.',
+                        'coupon' => $coupon
+                    ], 400);
+                }
             }
         }
 
