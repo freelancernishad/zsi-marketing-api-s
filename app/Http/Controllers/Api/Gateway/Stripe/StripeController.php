@@ -83,7 +83,7 @@ class StripeController extends Controller
 
                         // Check if payable type is "package" and call PackageSubscribe
                         if ($payment->payable_type === 'package') {
-                            PackageSubscribe($payment->payable_id);
+                            PackageSubscribe($payment->payable_id,$payment->user_id);
                         }
                     }
                     break;

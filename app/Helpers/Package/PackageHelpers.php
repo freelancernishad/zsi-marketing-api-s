@@ -2,26 +2,42 @@
 
 use App\Models\Package;
 use App\Models\UserPackage;
+use App\Models\UserPackageAddon;
 use Illuminate\Support\Facades\Auth;
 
-function PackageSubscribe($package_id)
+function PackageSubscribe($package_id, $user_id = null)
 {
+    // Fetch package
     $package = Package::find($package_id);
 
     if (!$package) {
         return response()->json(['message' => 'Package not found'], 404);
     }
 
-    // Example logic to assign the package to the user
+    // If $user_id is not provided, use Auth::id()
+    $userId = $user_id ?: Auth::id();
+
+    // Check if the user exists
+    if (!$userId) {
+        return response()->json(['message' => 'User not found'], 404);
+    }
+
+    // Create and assign the package to the user
     $userPackage = new UserPackage();
-    $userPackage->user_id = Auth::id();
+    $userPackage->user_id = $userId;
     $userPackage->package_id = $package->id;
     $userPackage->started_at = now();
     $userPackage->ends_at = now()->addDays($package->duration_days);
     $userPackage->save();
 
+    // Update UserPackageAddon for the user and package
+    UserPackageAddon::where('user_id', $userId)
+                    ->where('package_id', $package_id)
+                    ->update(['purchase_id' => $userPackage->id]);
+
     return response()->json(['message' => 'Successfully subscribed to the package']);
 }
+
 
 
 if (!function_exists('applyDiscount')) {

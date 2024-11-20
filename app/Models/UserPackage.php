@@ -12,4 +12,11 @@ class UserPackage extends Model
     {
         return $this->belongsTo(Package::class);
     }
+
+
+    // Add the relationship to UserPackageAddon (one UserPackage can have many Addons)
+    public function addons()
+    {
+        return $this->hasMany(UserPackageAddon::class);
+    }
 }

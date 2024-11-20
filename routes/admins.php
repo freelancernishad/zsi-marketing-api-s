@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Admin\Package\AdminPackageController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 use App\Http\Controllers\Api\Auth\Admin\AdminResetPasswordController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
+use App\Http\Controllers\Api\Admin\Package\AdminPurchasedHistoryController;
 use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
 use App\Http\Controllers\Api\Admin\SocialMedia\AdminSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
@@ -94,13 +95,13 @@ Route::prefix('admin')->group(function () {
 
 
 
+
+        Route::get('/package/purchased-history', [AdminPurchasedHistoryController::class, 'getAllHistory']);
+        Route::get('/package/purchased-history/{id}', [AdminPurchasedHistoryController::class, 'getSingleHistory']);
+
+
     });
 });
 
 
 
-        // Route to show the password reset form (GET request)
-        Route::post('admin/send/password/reset/link', [AdminResetPasswordController::class, 'sendResetLinkEmail'])->name('password.reset');
-
-        // Route to handle the password reset form submission (POST request)
-        Route::post('admin/password/reset', [AdminResetPasswordController::class, 'reset'])->name('admin.password.update');
