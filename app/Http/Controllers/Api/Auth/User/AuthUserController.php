@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Api\Auth\User;
 
 use App\Models\User;
+use App\Mail\VerifyEmail;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+
+use App\Mail\OtpNotification;
 use App\Models\TokenBlacklist;
+
+
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
+
 use Illuminate\Support\Facades\Auth;
-
-
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Validation\ValidationException;
@@ -36,32 +41,54 @@ class AuthUserController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        // Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        // Define payload data
-        $payload = [
-            'email' => $user->email,
-            'name' => $user->name,
-            'category' => $user->category, // Include category if applicable
-            'email_verified' => $user->hasVerifiedEmail(), // Check verification status
-        ];
-
+        // Generate a JWT token for the newly created user
         try {
-            // Generate a JWT token for the newly created user
             $token = JWTAuth::fromUser($user, ['guard' => 'user']);
         } catch (JWTException $e) {
             return response()->json(['error' => 'Could not create token'], 500);
         }
+
+        // Generate verification URL (if applicable)
+        $verify_url = $request->verify_url ?? null; // Optional verify URL from the request
+
+        // Notify user for email verification
+        if ($verify_url) {
+            Mail::to($user->email)->send(new VerifyEmail($user, $verify_url));
+        }else{
+            // Generate a 6-digit numeric OTP
+            $otp = random_int(100000, 999999); // Generate OTP
+            $user->otp = Hash::make($otp); // Store hashed OTP
+            $user->otp_expires_at = now()->addMinutes(5); // Set OTP expiration time
+            $user->save();
+
+            // Notify user with the OTP
+            Mail::to($user->email)->send(new OtpNotification($otp));
+
+        }
+
+
+
+        // Define payload data
+        $payload = [
+            'email' => $user->email,
+            'name' => $user->name,
+            'category' => $user->category ?? null, // Include category if applicable
+            'email_verified' => $user->hasVerifiedEmail(), // Check verification status
+        ];
 
         return response()->json([
             'token' => $token,
             'user' => $payload,
         ], 201);
     }
+
 
     /**
      * Log in a user.

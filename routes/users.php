@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AuthenticateUser;
 use App\Http\Controllers\Api\Coupon\CouponController;
 use App\Http\Controllers\Api\Auth\User\AuthUserController;
+use App\Http\Controllers\Api\Auth\User\VerificationController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
 use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
@@ -64,3 +65,10 @@ Route::prefix('coupons')->group(function () {
 // Password reset routes
 Route::post('user/password/email', [UserPasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('user/password/reset', [UserPasswordResetController::class, 'reset']);
+
+
+
+Route::post('/verify-otp', [VerificationController::class, 'verifyOtp']);
+Route::post('/resend/otp', [VerificationController::class, 'resendOtp']);
+Route::get('/email/verify/{hash}', [VerificationController::class, 'verifyEmail']);
+Route::post('/resend/verification-link', [VerificationController::class, 'resendVerificationLink']);
