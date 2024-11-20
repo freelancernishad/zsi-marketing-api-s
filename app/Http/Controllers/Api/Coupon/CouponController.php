@@ -259,6 +259,7 @@ class CouponController extends Controller
 
         return response()->json([
             'message' => 'Coupon is valid.',
+            'id' => $coupon->id,
             'code' => $coupon->code,
             'value' => $coupon->value,
             'product_amount' => $productAmount,
