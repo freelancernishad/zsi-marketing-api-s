@@ -35,7 +35,7 @@ class UserPackage extends Model
      */
     public function addons()
     {
-        return $this->hasMany(UserPackageAddon::class);
+        return $this->hasMany(UserPackageAddon::class,'purchase_id','id');
     }
 
     /**
@@ -45,7 +45,15 @@ class UserPackage extends Model
      */
     public function addonsDetails()
     {
-        return $this->hasManyThrough(PackageAddon::class, UserPackageAddon::class, 'user_package_id', 'id', 'id', 'addon_id');
+        // Corrected 'hasManyThrough' to link `PackageAddon` via `UserPackageAddon`
+        return $this->hasManyThrough(
+            PackageAddon::class,
+            UserPackageAddon::class,
+            'purchase_id',  // Foreign key on UserPackageAddon to UserPackage
+            'id',               // Foreign key on PackageAddon to be matched
+            'id',               // Local key on UserPackage to be matched
+            'addon_id'          // Foreign key in UserPackageAddon for PackageAddon
+        );
     }
 
     /**
@@ -55,6 +63,14 @@ class UserPackage extends Model
      */
     public function payments()
     {
-        return $this->hasManyThrough(Payment::class, UserPackageAddon::class, 'user_package_id', 'id', 'id', 'payment_id');
+        // Corrected 'hasManyThrough' to link `Payment` via `UserPackageAddon`
+        return $this->hasManyThrough(
+            Payment::class,
+            UserPackageAddon::class,
+            'purchase_id',  // Foreign key on UserPackageAddon to UserPackage
+            'id',               // Foreign key on Payment to be matched
+            'id',               // Local key on UserPackage to be matched
+            'payment_id'        // Foreign key in UserPackageAddon for Payment
+        );
     }
 }
