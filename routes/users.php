@@ -55,4 +55,6 @@ Route::prefix('social-media')->group(function () {
 
 Route::prefix('coupons')->group(function () {
     Route::post('/apply', [CouponController::class, 'apply']);
+    Route::post('/check', [CouponController::class, 'checkCoupon']);
+
 });

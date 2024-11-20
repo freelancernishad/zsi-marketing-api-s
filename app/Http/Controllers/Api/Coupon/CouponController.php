@@ -176,4 +176,61 @@ class CouponController extends Controller
             'discounted_total' => $discounted_total,
         ]);
     }
+
+
+    public function checkCoupon(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'coupon_code' => 'required|string|exists:coupons,code',
+            'user_id' => 'nullable|exists:users,id',
+            'item_id' => 'nullable|integer',
+            'item_type' => 'nullable|in:user,package,service',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        // Fetch coupon by code
+        $coupon = Coupon::where('code', $request->coupon_code)->with('associations')->first();
+
+        // Check if the coupon is active and within the validity period
+        if (!$coupon->is_active || now()->lt($coupon->valid_from) || now()->gt($coupon->valid_until)) {
+            return response()->json([
+                'message' => 'Coupon is inactive or expired.',
+                'coupon' => $coupon
+            ], 400);
+        }
+
+        // Check if the usage limit has been exceeded
+        if ($coupon->usage_limit && $coupon->usages()->count() >= $coupon->usage_limit) {
+            return response()->json([
+                'message' => 'Coupon usage limit has been reached.',
+                'coupon' => $coupon
+            ], 400);
+        }
+
+        // Check for valid association if item_id and item_type are provided
+        if ($request->has(['item_id', 'item_type'])) {
+            $isAssociated = $coupon->associations()
+                ->where('item_id', $request->item_id)
+                ->where('item_type', $request->item_type)
+                ->exists();
+
+            if (!$isAssociated) {
+                return response()->json([
+                    'message' => 'Coupon is not valid for this item.',
+                    'coupon' => $coupon
+                ], 400);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Coupon is valid.',
+            'coupon' => $coupon
+        ], 200);
+    }
+
+
+
 }
