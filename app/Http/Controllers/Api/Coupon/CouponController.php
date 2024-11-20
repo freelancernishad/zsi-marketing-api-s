@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\Coupon;
 
+use App\Models\User;
 use App\Models\Coupon;
+use App\Models\Package;
 use App\Models\CouponUsage;
-use App\Models\CouponAssociation;
 use Illuminate\Http\Request;
+use App\Models\CouponAssociation;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
@@ -185,14 +187,22 @@ class CouponController extends Controller
             'user_id' => 'nullable|exists:users,id',
             'item_id' => 'nullable|integer',
             'item_type' => 'nullable|in:user,package,service',
+            'product_amount' => 'required|numeric|min:0', // Validate product amount
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        // Fetch coupon by code
-        $coupon = Coupon::where('code', $request->coupon_code)->with('associations')->first();
+        // Fetch coupon by code without eager loading associations
+        $coupon = Coupon::where('code', $request->coupon_code)->first();
+
+        // Check if the coupon exists
+        if (!$coupon) {
+            return response()->json([
+                'message' => 'Coupon not found.',
+            ], 404);
+        }
 
         // Check if the coupon is active and within the validity period
         if (!$coupon->is_active || now()->lt($coupon->valid_from) || now()->gt($coupon->valid_until)) {
@@ -210,27 +220,56 @@ class CouponController extends Controller
             ], 400);
         }
 
-        // Check for valid association if item_id and item_type are provided
-        if ($request->has(['item_id', 'item_type'])) {
-            if (!$coupon->associations->isEmpty()) {
-                $isAssociated = $coupon->associations()
-                ->where('item_id', $request->item_id)
-                ->where('item_type', $request->item_type)
-                ->exists();
-                if (!$isAssociated) {
+        // Check if the coupon has any associations at all
+        $hasAssociations = CouponAssociation::where('coupon_id', $coupon->id)->exists();
+
+        if ($hasAssociations) {
+            // Validate associations if item_id and item_type are provided
+            if ($request->has(['item_id', 'item_type'])) {
+                // Check if the item_type is valid
+                $validItemTypes = ['user', 'package', 'service'];
+                if (!in_array($request->item_type, $validItemTypes)) {
+                    return response()->json([
+                        'message' => 'Invalid item type.',
+                    ], 400);
+                }
+
+                // Check for the association in CouponAssociation based on item_id and item_type
+                $association = CouponAssociation::where('coupon_id', $coupon->id)
+                    ->where('item_id', $request->item_id)
+                    ->where('item_type', $request->item_type)
+                    ->first();
+
+                // If no valid association is found, return an error
+                if (!$association) {
                     return response()->json([
                         'message' => 'Coupon is not valid for this item.',
-                        'coupon' => $coupon
                     ], 400);
                 }
             }
         }
 
+
+
+        // Calculate discount
+        $productAmount = $request->product_amount;
+        $discountValue = $coupon->value; // Assume coupon has a `value` field for discount percentage
+        $discountedAmount = ($discountValue / 100) * $productAmount;
+        $finalAmount = $productAmount - $discountedAmount;
+
         return response()->json([
             'message' => 'Coupon is valid.',
-            'coupon' => $coupon
+            'code' => $coupon->code,
+            'value' => $coupon->value,
+            'product_amount' => $productAmount,
+            'discount' => $discountValue . '%',
+            'discounted_amount' => $discountedAmount,
+            'final_amount' => $finalAmount,
         ], 200);
     }
+
+
+
 
 
 
