@@ -23,20 +23,8 @@ class AppServiceProvider extends ServiceProvider
             // Loop through all the settings and dynamically set the configuration values
             foreach ($settings as $setting) {
                 // Set S3-related configuration values
-                if (in_array($setting->key, [
-                    'AWS_ACCESS_KEY_ID',
-                    'AWS_SECRET_ACCESS_KEY',
-                    'AWS_DEFAULT_REGION',
-                    'AWS_BUCKET',
-                    'AWS_URL',
-                    'AWS_ENDPOINT',
-                    'AWS_USE_PATH_STYLE_ENDPOINT',
-                ])) {
-                    Config::set('filesystems.disks.s3.' . $setting->key, $setting->value);
-                }else{
-                    Config::set($setting->key, $setting->value);
-                }
 
+                Config::set($setting->key, $setting->value);
                 // Optionally, you can set them as environment variables (for env overrides)
                 $_ENV[$setting->key] = $setting->value;
             }

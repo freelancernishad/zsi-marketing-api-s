@@ -6,6 +6,7 @@ use App\Http\Middleware\AuthenticateUser;
 use App\Http\Controllers\Api\Coupon\CouponController;
 use App\Http\Controllers\Api\Auth\User\AuthUserController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
+use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
 use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
 use App\Http\Controllers\Api\User\SocialMedia\UserSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
@@ -58,3 +59,8 @@ Route::prefix('coupons')->group(function () {
     Route::post('/check', [CouponController::class, 'checkCoupon']);
 
 });
+
+
+// Password reset routes
+Route::post('user/password/email', [UserPasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('user/password/reset', [UserPasswordResetController::class, 'reset']);

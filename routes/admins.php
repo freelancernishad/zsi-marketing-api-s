@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\Users\UserController;
 use App\Http\Controllers\Api\Auth\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\Package\AdminPackageController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
+use App\Http\Controllers\Api\Auth\Admin\AdminResetPasswordController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
 use App\Http\Controllers\Api\Admin\SocialMedia\AdminSocialMediaLinkController;
@@ -92,5 +93,14 @@ Route::prefix('admin')->group(function () {
         Route::patch('/support/{ticket}/status', [AdminSupportTicketApiController::class, 'updateStatus']);
 
 
+
     });
 });
+
+
+
+        // Route to show the password reset form (GET request)
+        Route::post('admin/send/password/reset/link', [AdminResetPasswordController::class, 'sendResetLinkEmail'])->name('password.reset');
+
+        // Route to handle the password reset form submission (POST request)
+        Route::post('admin/password/reset', [AdminResetPasswordController::class, 'reset'])->name('admin.password.update');

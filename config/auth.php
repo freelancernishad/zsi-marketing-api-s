@@ -138,6 +138,12 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        'admins' => [
+            'provider' => 'admins',
+            'table' => 'password_reset_tokens', // Ensure this matches your table name
+            'expire' => 60, // Link expires in 60 minutes
+            'throttle' => 60, // Prevents multiple reset requests within 60 minutes
+        ],
     ],
 
     /*
