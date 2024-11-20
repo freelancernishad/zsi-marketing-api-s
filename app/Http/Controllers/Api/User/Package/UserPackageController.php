@@ -110,10 +110,10 @@ class UserPackageController extends Controller
             ]);
 
             // Return success response
-            return response()->json($paymentResult, 200);
+            return $paymentResult;
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Payment processing error: ' . $e->getMessage()], 500);
+            return ['error' => 'Payment processing error: ' . $e->getMessage()];
         }
     }
 
