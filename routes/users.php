@@ -6,7 +6,9 @@ use App\Http\Middleware\AuthenticateUser;
 use App\Http\Controllers\Api\Coupon\CouponController;
 use App\Http\Controllers\Api\Auth\User\AuthUserController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
+use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
 use App\Http\Controllers\Api\User\SocialMedia\UserSocialMediaLinkController;
+use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
 
 
 
@@ -29,6 +31,14 @@ Route::prefix('user')->group(function () {
 
 
         Route::post('package/subscribe', [UserPackageController::class, 'packagePurchase']);
+
+
+        // Support tickets
+        Route::get('/support', [SupportTicketApiController::class, 'index']);
+        Route::post('/support', [SupportTicketApiController::class, 'store']);
+        Route::get('/support/{ticket}', [SupportTicketApiController::class, 'show']);
+        Route::post('/support/{ticket}/reply', [AdminSupportTicketApiController::class, 'reply']);
+
 
     });
 

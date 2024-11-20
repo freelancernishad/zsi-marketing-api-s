@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
 use App\Http\Controllers\Api\Admin\SocialMedia\AdminSocialMediaLinkController;
+use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
 
 Route::prefix('auth/admin')->group(function () {
     Route::post('login', [AdminAuthController::class, 'login'])->name('admin.login');
@@ -83,6 +84,12 @@ Route::prefix('admin')->group(function () {
             Route::delete('package-addons/{id}', [AdminPackageAddonController::class, 'destroy']); // Delete an addon
         });
 
+
+        // Support ticket routes
+        Route::get('/support', [AdminSupportTicketApiController::class, 'index']);
+        Route::get('/support/{ticket}', [AdminSupportTicketApiController::class, 'show']);
+        Route::post('/support/{ticket}/reply', [AdminSupportTicketApiController::class, 'reply']);
+        Route::patch('/support/{ticket}/status', [AdminSupportTicketApiController::class, 'updateStatus']);
 
 
     });
