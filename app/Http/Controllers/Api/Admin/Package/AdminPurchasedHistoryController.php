@@ -15,11 +15,32 @@ class AdminPurchasedHistoryController extends Controller
      */
     public function getAllHistory(Request $request)
     {
-        // Retrieve all purchased packages with specific columns for user and package relationships
-        $userPackages = UserPackage::with([
+        // Retrieve the search query
+        $searchQuery = $request->input('search');
+
+        // Query with filters
+        $query = UserPackage::with([
             'user:id,name',          // Load only 'id' and 'name' of the user
             'package:id,name,price', // Load only 'id', 'name', and 'price' of the package
-        ])->get();
+        ]);
+
+        // Apply global search if search query is provided
+        if ($searchQuery) {
+            $query->where(function ($q) use ($searchQuery) {
+                $q->whereHas('user', function ($userQuery) use ($searchQuery) {
+                    $userQuery->where('name', 'like', '%' . $searchQuery . '%');
+                })
+                ->orWhereHas('package', function ($packageQuery) use ($searchQuery) {
+                    $packageQuery->where('name', 'like', '%' . $searchQuery . '%');
+                })
+                ->orWhere('id', 'like', '%' . $searchQuery . '%') // Search by UserPackage ID
+                ->orWhere('started_at', 'like', '%' . $searchQuery . '%') // Search by started_at
+                ->orWhere('ends_at', 'like', '%' . $searchQuery . '%');   // Search by ends_at
+            });
+        }
+
+        // Execute the query and get results
+        $userPackages = $query->get();
 
         // Hide 'discounts' and 'discounted_price' from the package relationship
         $userPackages->each(function ($userPackage) {
@@ -29,6 +50,7 @@ class AdminPurchasedHistoryController extends Controller
         // Return the result as a JSON response
         return response()->json($userPackages);
     }
+
 
 
     /**
