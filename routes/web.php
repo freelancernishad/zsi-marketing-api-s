@@ -4,11 +4,14 @@ use App\Mail\TestMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// For web routes
+Route::get('/clear-cache', [SystemSettingController::class, 'clearCache']);
 
 
 Route::get('send-test-email', function () {

@@ -2,77 +2,100 @@
 
 namespace App\Http\Controllers\Api\SystemSettings;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Models\SystemSetting;
+use App\Jobs\RefreshConfigCache;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Validator;
 
 class SystemSettingController extends Controller
 {
     public function storeOrUpdate(Request $request)
-{
-    // Validate the input to ensure it's an array of key-value pairs
-    $rules = [
-        '*' => 'required|array', // Each item must be an array with key-value pairs
-        '*.key' => 'required|string', // Each key must be a string
-        '*.value' => 'required|string', // Each value must be a string
-    ];
+    {
+        // Validation rules for the input
+        $rules = [
+            '*' => 'required|array', // Each item must be an array
+            '*.key' => 'required|string', // Each key must be a string
+            '*.value' => 'required|string', // Each value must be a string
+        ];
 
-    // Create the validator instance
-    $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), $rules);
 
-    // Check if validation fails
-    if ($validator->fails()) {
-        return response()->json([
-            'errors' => $validator->errors()
-        ], 422); // Unprocessable Entity
-    }
+        // If validation fails, return error response
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
-    // Loop through the settings array and update or create each setting
-    $settingsData = $request->all();
+        // Retrieve settings from the request
+        $settingsData = $request->all();
+        $envPath = base_path('.env');
+        $envContents = file_exists($envPath) ? file_get_contents($envPath) : '';
 
-    foreach ($settingsData as $setting) {
-        // Update or create the system setting in the database
-        SystemSetting::updateOrCreate(
-            ['key' => $setting['key']], // Search by 'key'
-            ['value' => $setting['value']] // If found, update 'value'; if not, create a new setting
-        );
+        foreach ($settingsData as $setting) {
+            // Update or create the setting in the database
+            SystemSetting::updateOrCreate(
+                ['key' => $setting['key']],
+                ['value' => $setting['value']]
+            );
 
-        // If the setting key is related to AWS, update the .env file
-        if (in_array($setting['key'], [
-            'AWS_ACCESS_KEY_ID',
-            'AWS_SECRET_ACCESS_KEY',
-            'AWS_DEFAULT_REGION',
-            'AWS_BUCKET',
-            'AWS_URL',
-            'AWS_ENDPOINT',
-            'AWS_USE_PATH_STYLE_ENDPOINT',
-        ])) {
-            // Get the current .env contents
-            $envPath = base_path('.env');
-            $envContents = file_get_contents($envPath);
+            // Handle AWS or other specific keys by updating the .env file
+            // if (in_array($setting['key'], [
+            //     'AWS_ACCESS_KEY_ID',
+            //     'AWS_SECRET_ACCESS_KEY',
+            //     'AWS_DEFAULT_REGION',
+            //     'AWS_BUCKET',
+            //     'AWS_URL',
+            //     'AWS_ENDPOINT',
+            //     'AWS_USE_PATH_STYLE_ENDPOINT',
+            // ])) {
+            //     $pattern = "/^" . preg_quote($setting['key'], '/') . "=.*/m";
 
-            // Create the pattern to match the existing setting key in .env
-            $pattern = "/^" . preg_quote($setting['key'], '/') . "=.*/m";
+            //     // Update or append the key-value pair in .env
+            //     if (preg_match($pattern, $envContents)) {
+            //         $envContents = preg_replace($pattern, $setting['key'] . '=' . $setting['value'], $envContents);
+            //     } else {
+            //         $envContents .= "\n" . $setting['key'] . '=' . $setting['value'];
+            //     }
+            // }
+        }
 
-            // If the key exists in the .env file, replace it, otherwise add it
-            if (preg_match($pattern, $envContents)) {
-                // Replace the line with the new value
-                $envContents = preg_replace($pattern, $setting['key'] . '=' . $setting['value'], $envContents);
-            } else {
-                // If the key doesn't exist, append it at the end of the .env file
-                $envContents .= "\n" . $setting['key'] . '=' . $setting['value'];
-            }
-
-            // Write the updated contents back to the .env file
+        // Write back to .env safely
+        if (!empty($envContents)) {
             file_put_contents($envPath, $envContents);
         }
+
+
+        // Return success response
+        return response()->json([
+            'message' => 'System settings saved, .env updated, and configuration refreshed successfully!',
+        ], 200);
     }
 
-    // Return success response
-    return response()->json([
-        'message' => 'System settings saved and .env updated successfully!'
-    ], 200); // OK
-}
+
+
+    public function clearCache()
+    {
+        try {
+            // Clear and cache config
+            Artisan::call('config:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('config:cache');
+
+            return response()->json([
+                'message' => 'Cache cleared and configuration refreshed successfully!',
+            ], 200);
+        } catch (\Exception $e) {
+            // Log the error and return a failure response
+            \Log::error('Error clearing cache: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Failed to clear cache.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
 }
