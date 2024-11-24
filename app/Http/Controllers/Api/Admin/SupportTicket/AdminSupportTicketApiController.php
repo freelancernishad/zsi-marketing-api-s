@@ -20,10 +20,11 @@ class AdminSupportTicketApiController extends Controller
     // View a specific support ticket
     public function show($id)
     {
-        $ticket = SupportTicket::with(['user'])->findOrFail($id);
+        $ticket = SupportTicket::with(['user', 'replies'])->findOrFail($id);
         return response()->json($ticket);
     }
 
+    // Reply to a support ticket
     public function reply(Request $request, $id)
     {
         // Validate the request
@@ -31,6 +32,7 @@ class AdminSupportTicketApiController extends Controller
             'reply' => 'required|string',
             'status' => 'required|string|in:open,closed,pending,replay', // Define allowed statuses
             'reply_id' => 'nullable|exists:replies,id', // Check if the parent reply exists
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048', // Validate attachment
         ]);
 
         if ($validator->fails()) {
@@ -43,13 +45,13 @@ class AdminSupportTicketApiController extends Controller
         // Update ticket status
         $ticket->status = $request->status;
 
-        // Create the reply
+        // Prepare reply data
         $replyData = [
             'reply' => $request->reply,
             'reply_id' => $request->reply_id, // Set the parent reply ID if provided
         ];
 
-        // Check if the logged-in user is an admin or a regular user
+        // Check if the logged-in user is an admin
         if (auth()->guard('admin')->check()) {
             $replyData['admin_id'] = auth()->guard('admin')->id();
         } else {
@@ -57,21 +59,28 @@ class AdminSupportTicketApiController extends Controller
         }
 
         // Create a new reply associated with the support ticket
-        $ticket->replies()->create($replyData);
+        $reply = $ticket->replies()->create($replyData);
+
+        // Handle attachment if present
+        if ($request->hasFile('attachment')) {
+            $reply->saveAttachment($request->file('attachment'));
+        }
 
         // Save the ticket with the updated status
         $ticket->save();
 
-        return response()->json(['message' => 'Reply sent and ticket status updated.'], 200);
+        return response()->json([
+            'message' => 'Reply sent successfully and ticket status updated.',
+            'reply' => $reply
+        ], 200);
     }
-
-
 
     // Update ticket status
     public function updateStatus(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|string|in:open,closed,pending', // Define allowed statuses
+            'status' => 'required|string|in:open,closed,pending,replay', // Define allowed statuses
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048', // Validate attachment
         ]);
 
         if ($validator->fails()) {
@@ -80,6 +89,12 @@ class AdminSupportTicketApiController extends Controller
 
         $ticket = SupportTicket::findOrFail($id);
         $ticket->status = $request->status;
+
+        // Handle attachment if present
+        if ($request->hasFile('attachment')) {
+            $ticket->saveAttachment($request->file('attachment'));
+        }
+
         $ticket->save();
 
         return response()->json(['message' => 'Ticket status updated successfully.'], 200);

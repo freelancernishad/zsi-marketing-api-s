@@ -15,6 +15,7 @@ class Reply extends Model
         'user_id',
         'reply',
         'reply_id',
+        'attachment', // Add this line
     ];
 
     protected $with = [
@@ -48,5 +49,21 @@ class Reply extends Model
     public function user()
     {
         return $this->belongsTo(User::class); // Assuming you have a User model
+    }
+
+
+    /**
+     * Save the attachment for the reply.
+     *
+     * @param \Illuminate\Http\UploadedFile $file
+     * @return string File path of the uploaded attachment
+     */
+    public function saveAttachment($file)
+    {
+        $filePath = uploadFileToS3($file, 'attachments/replies'); // Define the S3 directory
+        $this->attachment = $filePath;
+        $this->save();
+
+        return $filePath;
     }
 }

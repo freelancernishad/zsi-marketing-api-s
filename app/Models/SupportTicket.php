@@ -15,6 +15,7 @@ class SupportTicket extends Model
         'message',
         'status',
         'priority', // Add this line
+        'attachment', // Add this line
     ];
 
 
@@ -33,4 +34,22 @@ class SupportTicket extends Model
     {
         return $this->hasMany(Reply::class);
     }
+
+
+
+    /**
+     * Save the attachment for the support ticket.
+     *
+     * @param \Illuminate\Http\UploadedFile $file
+     * @return string File path of the uploaded attachment
+     */
+    public function saveAttachment($file)
+    {
+        $filePath = uploadFileToS3($file, 'attachments/support_tickets'); // Define the S3 directory
+        $this->attachment = $filePath;
+        $this->save();
+
+        return $filePath;
+    }
+
 }

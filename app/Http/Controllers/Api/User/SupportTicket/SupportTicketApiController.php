@@ -13,7 +13,7 @@ class SupportTicketApiController extends Controller
     // Get all support tickets for the authenticated user
     public function index()
     {
-        $tickets = SupportTicket::where('user_id', Auth::id())->orderBy('id','desc')->get();
+        $tickets = SupportTicket::where('user_id', Auth::id())->orderBy('id', 'desc')->get();
         return response()->json($tickets, 200);
     }
 
@@ -24,18 +24,25 @@ class SupportTicketApiController extends Controller
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
             'priority' => 'nullable|string',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048', // Validate attachment
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Create the ticket
         $ticket = SupportTicket::create([
             'user_id' => Auth::id(),
             'subject' => $request->subject,
             'message' => $request->message,
             'priority' => $request->priority,
         ]);
+
+        // Handle attachment if present
+        if ($request->hasFile('attachment')) {
+           $ticket->saveAttachment($request->file('attachment'));
+        }
 
         return response()->json(['message' => 'Ticket created successfully.', 'ticket' => $ticket], 201);
     }
@@ -51,8 +58,33 @@ class SupportTicketApiController extends Controller
         return response()->json($ticket, 200);
     }
 
+    // Update a support ticket (if needed)
+    public function update(Request $request, SupportTicket $ticket)
+    {
+        // Ensure the ticket belongs to the authenticated user
+        if ($ticket->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized access.'], 403);
+        }
 
+        $validator = Validator::make($request->all(), [
+            'subject' => 'nullable|string|max:255',
+            'message' => 'nullable|string',
+            'priority' => 'nullable|string',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:2048', // Validate attachment
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
+        // Update the ticket details
+        $ticket->update($request->only('subject', 'message', 'priority'));
+
+        // Handle attachment if present
+        if ($request->hasFile('attachment')) {
+            $ticket->saveAttachment($request->file('attachment'));
+        }
+
+        return response()->json(['message' => 'Ticket updated successfully.', 'ticket' => $ticket], 200);
+    }
 }
-
