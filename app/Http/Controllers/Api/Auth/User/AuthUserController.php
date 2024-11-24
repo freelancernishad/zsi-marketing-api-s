@@ -242,7 +242,13 @@ class AuthUserController extends Controller
                 return response()->json(['message' => 'Token is invalid or user not found.'], 401);
             }
 
-            return response()->json(['message' => 'Token is valid.',], 200);
+            $payload = [
+                'email' => $user->email,
+                'name' => $user->name,
+                'email_verified_at' => $user->hasVerifiedEmail(), // Checks verification status
+            ];
+
+            return response()->json(['message' => 'Token is valid.','user'=>$payload], 200);
         } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
             return response()->json(['message' => 'Token has expired.'], 401);
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
