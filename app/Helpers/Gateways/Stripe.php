@@ -29,7 +29,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
     if ($couponId) {
         $coupon = Coupon::find($couponId);
         if ($coupon && $coupon->isValid()) {
-            $discount = $coupon->calculateDiscount($amount);
+            $discount = $coupon->getDiscountAmount($amount);
             $finalAmount -= $discount; // Subtract discount from the final amount
         } else {
             return response()->json(['error' => 'Invalid or expired coupon'], 400);

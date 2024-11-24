@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Auth\User\AuthUserController;
 use App\Http\Controllers\Api\Auth\User\VerificationController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
+use App\Http\Controllers\Api\User\Package\UserPurchasedHistoryController;
 use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
 use App\Http\Controllers\Api\User\SocialMedia\UserSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
@@ -40,6 +41,11 @@ Route::prefix('user')->group(function () {
         Route::post('/support', [SupportTicketApiController::class, 'store']);
         Route::get('/support/{ticket}', [SupportTicketApiController::class, 'show']);
         Route::post('/support/{ticket}/reply', [AdminSupportTicketApiController::class, 'reply']);
+
+
+        Route::get('/packages/history', [UserPurchasedHistoryController::class, 'getPurchasedHistory']);
+        Route::get('/packages/history/{id}', [UserPurchasedHistoryController::class, 'getSinglePurchasedHistory']);
+
 
 
     });
