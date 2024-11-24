@@ -27,47 +27,39 @@ class UserProfileController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function updateProfile(Request $request)
-    {
-        $user = Auth::user(); // Retrieve the authenticated user
+{
+    $user = Auth::user(); // Retrieve the authenticated user
 
-        // Validate input
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'profile_picture' => 'sometimes|image|max:2048',
+    // Validate input
+    $validator = Validator::make($request->all(), [
+        'name' => 'nullable|string|max:255',
+        'profile_picture' => 'nullable|image|max:2048',
+        'phone' => 'nullable|string|max:15',
+        'business_name' => 'nullable|string|max:255',
+        'country' => 'nullable|string|max:255',
+        'state' => 'nullable|string|max:255',
+        'city' => 'nullable|string|max:255',
+        'region' => 'nullable|string|max:255',
+        'zip_code' => 'nullable|string|max:20',
+    ]);
 
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+    }
 
-            'phone' => 'sometimes|string|max:15',
-            'business_name' => 'sometimes|string|max:255',
-            'country' => 'sometimes|string|max:255',
-            'state' => 'sometimes|string|max:255',
-            'city' => 'sometimes|string|max:255',
-            'region' => 'sometimes|string|max:255',
-            'zip_code' => 'sometimes|string|max:20',
-        ]);
+    // Update user's profile with validated data
+    $user->update($request->only([
+        'name',
+        'phone',
+        'business_name',
+        'country',
+        'state',
+        'city',
+        'region',
+        'zip_code',
+    ]));
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        // Update user's profile with validated data
-        $user->update($request->only([
-            'name',
-            'phone',
-            'business_name',
-            'country',
-            'state',
-            'city',
-            'region',
-            'zip_code',
-        ]));
-
-
-
-
-
-
-
-            // Handle profile picture upload if provided
+    // Handle profile picture upload if provided
     if ($request->hasFile('profile_picture')) {
         try {
             $filePath = $user->saveProfilePicture($request->file('profile_picture'));
@@ -78,7 +70,7 @@ class UserProfileController extends Controller
         }
     }
 
+    return response()->json($user);
+}
 
-        return response()->json($user);
-    }
 }
