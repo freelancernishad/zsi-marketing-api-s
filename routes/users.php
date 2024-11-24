@@ -1,6 +1,5 @@
 <?php
 
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AuthenticateUser;
 use App\Http\Controllers\Api\Coupon\CouponController;
@@ -15,13 +14,12 @@ use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
 use App\Http\Controllers\Api\User\SocialMedia\UserSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
 
-
-
+// Authentication routes for users
 Route::prefix('auth/user')->group(function () {
     Route::post('login', [AuthUserController::class, 'login'])->name('login');
     Route::post('register', [AuthUserController::class, 'register']);
 
-    Route::middleware(AuthenticateUser::class)->group(function () { // Applying user middleware
+    Route::middleware(AuthenticateUser::class)->group(function () {
         Route::post('logout', [AuthUserController::class, 'logout']);
         Route::get('me', [AuthUserController::class, 'me']);
         Route::post('change-password', [AuthUserController::class, 'changePassword']);
@@ -29,63 +27,46 @@ Route::prefix('auth/user')->group(function () {
     });
 });
 
-Route::prefix('user')->group(function () {
-    Route::middleware(AuthenticateUser::class)->group(function () {
+// User-specific routes
+Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
+    // Profile routes
+    Route::get('/profile', [UserProfileController::class, 'getProfile']);
+    Route::post('/profile', [UserProfileController::class, 'updateProfile']);
 
-////// auth routes
+    // Package routes
+    Route::post('package/subscribe', [UserPackageController::class, 'packagePurchase']);
+    Route::get('/packages/history', [UserPurchasedHistoryController::class, 'getPurchasedHistory']);
+    Route::get('/packages/history/{id}', [UserPurchasedHistoryController::class, 'getSinglePurchasedHistory']);
 
-        Route::get('/profile', [UserProfileController::class, 'getProfile']);
-        Route::post('/profile', [UserProfileController::class, 'updateProfile']);
+    // Support ticket routes
+    Route::get('/support', [SupportTicketApiController::class, 'index']);
+    Route::post('/support', [SupportTicketApiController::class, 'store']);
+    Route::get('/support/{ticket}', [SupportTicketApiController::class, 'show']);
+    Route::post('/support/{ticket}/reply', [AdminSupportTicketApiController::class, 'reply']);
 
-
-
-        Route::post('package/subscribe', [UserPackageController::class, 'packagePurchase']);
-
-
-        // Support tickets
-        Route::get('/support', [SupportTicketApiController::class, 'index']);
-        Route::post('/support', [SupportTicketApiController::class, 'store']);
-        Route::get('/support/{ticket}', [SupportTicketApiController::class, 'show']);
-        Route::post('/support/{ticket}/reply', [AdminSupportTicketApiController::class, 'reply']);
-
-
-        Route::get('/packages/history', [UserPurchasedHistoryController::class, 'getPurchasedHistory']);
-        Route::get('/packages/history/{id}', [UserPurchasedHistoryController::class, 'getSinglePurchasedHistory']);
-
-
-
-            Route::post('/schedule', [UserSchedulesController::class, 'create']); // Create a new schedule
-            Route::get('/schedules', [UserSchedulesController::class, 'index']); // Get authenticated user's schedules
-            Route::get('/schedule/{id}', [UserSchedulesController::class, 'show']); // Get a specific schedule
-
-
-
-    });
-
+    // Schedule routes
+    Route::post('/schedule', [UserSchedulesController::class, 'create']);
+    Route::get('/schedules', [UserSchedulesController::class, 'index']);
+    Route::get('/schedule/{id}', [UserSchedulesController::class, 'show']);
 });
 
-
+// Social media routes
 Route::prefix('social-media')->group(function () {
-    // Get all social media links
     Route::get('links', [UserSocialMediaLinkController::class, 'index'])->name('socialMediaLinks.index');
-
-    // Get a specific social media link
     Route::get('links/{id}', [UserSocialMediaLinkController::class, 'show'])->name('socialMediaLinks.show');
 });
 
+// Coupon routes
 Route::prefix('coupons')->group(function () {
     Route::post('/apply', [CouponController::class, 'apply']);
     Route::post('/check', [CouponController::class, 'checkCoupon']);
-
 });
-
 
 // Password reset routes
 Route::post('user/password/email', [UserPasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('user/password/reset', [UserPasswordResetController::class, 'reset']);
 
-
-
+// Verification routes
 Route::post('/verify-otp', [VerificationController::class, 'verifyOtp']);
 Route::post('/resend/otp', [VerificationController::class, 'resendOtp']);
 Route::get('/email/verify/{hash}', [VerificationController::class, 'verifyEmail']);

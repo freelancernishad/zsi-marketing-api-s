@@ -16,94 +16,101 @@ use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
 use App\Http\Controllers\Api\Admin\SocialMedia\AdminSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
 
+// Admin Authentication Routes
 Route::prefix('auth/admin')->group(function () {
     Route::post('login', [AdminAuthController::class, 'login'])->name('admin.login');
     Route::post('register', [AdminAuthController::class, 'register']);
 
-    Route::middleware(AuthenticateAdmin::class)->group(function () { // Applying admin middleware
+    Route::middleware(AuthenticateAdmin::class)->group(function () {
         Route::post('logout', [AdminAuthController::class, 'logout']);
         Route::get('me', [AdminAuthController::class, 'me']);
         Route::post('/change-password', [AdminAuthController::class, 'changePassword']);
         Route::get('check-token', [AdminAuthController::class, 'checkToken']);
-
     });
 });
 
-Route::prefix('admin')->group(function () {
-    Route::middleware(AuthenticateAdmin::class)->group(function () { // Applying admin middleware
-        Route::post('/system-setting', [SystemSettingController::class, 'storeOrUpdate']);
-        Route::get('/allowed-origins', [AllowedOriginController::class, 'index']);
-        Route::post('/allowed-origins', [AllowedOriginController::class, 'store']);
-        Route::put('/allowed-origins/{id}', [AllowedOriginController::class, 'update']);
-        Route::delete('/allowed-origins/{id}', [AllowedOriginController::class, 'destroy']);
+// Admin Routes
+Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () {
+    // System Settings
+    Route::post('/system-setting', [SystemSettingController::class, 'storeOrUpdate']);
 
+    // Allowed Origins
+    Route::prefix('allowed-origins')->group(function () {
+        Route::get('/', [AllowedOriginController::class, 'index']);
+        Route::post('/', [AllowedOriginController::class, 'store']);
+        Route::put('/{id}', [AllowedOriginController::class, 'update']);
+        Route::delete('/{id}', [AllowedOriginController::class, 'destroy']);
+    });
 
+    // User Management
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('/', [UserController::class, 'store']);
+        Route::get('/{user}', [UserController::class, 'show']);
+        Route::put('/{user}', [UserController::class, 'update']);
+        Route::delete('/{user}', [UserController::class, 'destroy']);
+    });
 
-        Route::prefix('users')->group(function () {
-            Route::get('/', [UserController::class, 'index']);          // List users
-            Route::post('/', [UserController::class, 'store']);         // Create user
-            Route::get('/{user}', [UserController::class, 'show']);     // Show user details
-            Route::put('/{user}', [UserController::class, 'update']);   // Update user
-            Route::delete('/{user}', [UserController::class, 'destroy']); // Delete user
-        });
+    // Coupons
+    Route::prefix('coupons')->group(function () {
+        Route::get('/', [CouponController::class, 'index']);
+        Route::post('/', [CouponController::class, 'store']);
+        Route::post('/{id}', [CouponController::class, 'update']);
+        Route::delete('/{id}', [CouponController::class, 'destroy']);
+    });
 
-        Route::prefix('coupons')->group(function () {
-            Route::get('/', [CouponController::class, 'index']);
-            Route::post('/', [CouponController::class, 'store']);
-            Route::post('/{id}', [CouponController::class, 'update']);
-            Route::delete('/{id}', [CouponController::class, 'destroy']);
-        });
+    // Transitions
+    Route::prefix('transitions')->group(function () {
+        Route::get('/transaction-history', [AdminPaymentController::class, 'getAllTransactionHistory'])
+            ->name('admin.transitions.transaction-history');
+    });
 
-        Route::prefix('transitions')->group(function () {
-            Route::get('/transaction-history', [AdminPaymentController::class, 'getAllTransactionHistory'])
-                ->name('admin.transitions.transaction-history');
-        });
+    // Social Media Links
+    Route::prefix('social-media/links')->group(function () {
+        Route::get('/', [AdminSocialMediaLinkController::class, 'index'])->name('admin.socialMediaLinks.index');
+        Route::get('/{id}', [AdminSocialMediaLinkController::class, 'show'])->name('admin.socialMediaLinks.show');
+        Route::post('/', [AdminSocialMediaLinkController::class, 'store'])->name('admin.socialMediaLinks.store');
+        Route::post('/{id}', [AdminSocialMediaLinkController::class, 'update'])->name('admin.socialMediaLinks.update');
+        Route::delete('/{id}', [AdminSocialMediaLinkController::class, 'destroy'])->name('admin.socialMediaLinks.destroy');
+        Route::patch('/{id}/toggle-status', [AdminSocialMediaLinkController::class, 'toggleStatus']);
+        Route::patch('/{id}/update-index-no', [AdminSocialMediaLinkController::class, 'updateIndexNo']);
+    });
 
+    // Packages
+    Route::prefix('packages')->group(function () {
+        Route::get('/', [AdminPackageController::class, 'index']);
+        Route::get('/{id}', [AdminPackageController::class, 'show']);
+        Route::post('/', [AdminPackageController::class, 'store']);
+        Route::put('/{id}', [AdminPackageController::class, 'update']);
+        Route::delete('/{id}', [AdminPackageController::class, 'destroy']);
+    });
 
-        Route::prefix('social-media')->group(function () {
-            Route::get('links', [AdminSocialMediaLinkController::class, 'index'])->name('admin.socialMediaLinks.index');
-            Route::get('links/{id}', [AdminSocialMediaLinkController::class, 'show'])->name('admin.socialMediaLinks.show');
-            Route::post('links', [AdminSocialMediaLinkController::class, 'store'])->name('admin.socialMediaLinks.store');
-            Route::post('links/{id}', [AdminSocialMediaLinkController::class, 'update'])->name('admin.socialMediaLinks.update');
-            Route::delete('links/{id}', [AdminSocialMediaLinkController::class, 'destroy'])->name('admin.socialMediaLinks.destroy');
-            Route::patch('links/{id}/toggle-status', [AdminSocialMediaLinkController::class, 'toggleStatus']);
-            Route::patch('links/{id}/update-index-no', [AdminSocialMediaLinkController::class, 'updateIndexNo']);
-        });
+    // Package Addons
+    Route::prefix('package-addons')->group(function () {
+        Route::get('/', [AdminPackageAddonController::class, 'index']);
+        Route::post('/', [AdminPackageAddonController::class, 'store']);
+        Route::get('/{id}', [AdminPackageAddonController::class, 'show']);
+        Route::put('/{id}', [AdminPackageAddonController::class, 'update']);
+        Route::delete('/{id}', [AdminPackageAddonController::class, 'destroy']);
+    });
 
-        Route::prefix('/')->group(function () {
-            Route::get('packages', [AdminPackageController::class, 'index']);
-            Route::get('packages/{id}', [AdminPackageController::class, 'show']);
-            Route::post('packages', [AdminPackageController::class, 'store']);
-            Route::put('packages/{id}', [AdminPackageController::class, 'update']);
-            Route::delete('packages/{id}', [AdminPackageController::class, 'destroy']);
-        });
+    // Support Tickets
+    Route::prefix('support')->group(function () {
+        Route::get('/', [AdminSupportTicketApiController::class, 'index']);
+        Route::get('/{ticket}', [AdminSupportTicketApiController::class, 'show']);
+        Route::post('/{ticket}/reply', [AdminSupportTicketApiController::class, 'reply']);
+        Route::patch('/{ticket}/status', [AdminSupportTicketApiController::class, 'updateStatus']);
+    });
 
+    // Purchased History
+    Route::prefix('package/purchased-history')->group(function () {
+        Route::get('/', [AdminPurchasedHistoryController::class, 'getAllHistory']);
+        Route::get('/{id}', [AdminPurchasedHistoryController::class, 'getSingleHistory']);
+    });
 
-        Route::prefix('/')->group(function () {
-            Route::get('package-addons/', [AdminPackageAddonController::class, 'index']); // List all addons
-            Route::post('package-addons/', [AdminPackageAddonController::class, 'store']); // Create a new addon
-            Route::get('package-addons/{id}', [AdminPackageAddonController::class, 'show']); // Get a specific addon
-            Route::put('package-addons/{id}', [AdminPackageAddonController::class, 'update']); // Update an addon
-            Route::delete('package-addons/{id}', [AdminPackageAddonController::class, 'destroy']); // Delete an addon
-        });
-
-
-        // Support ticket routes
-        Route::get('/support', [AdminSupportTicketApiController::class, 'index']);
-        Route::get('/support/{ticket}', [AdminSupportTicketApiController::class, 'show']);
-        Route::post('/support/{ticket}/reply', [AdminSupportTicketApiController::class, 'reply']);
-        Route::patch('/support/{ticket}/status', [AdminSupportTicketApiController::class, 'updateStatus']);
-
-
-
-
-        Route::get('/package/purchased-history', [AdminPurchasedHistoryController::class, 'getAllHistory']);
-        Route::get('/package/purchased-history/{id}', [AdminPurchasedHistoryController::class, 'getSingleHistory']);
-
-        Route::get('/schedules', [AdminSchedulesController::class, 'index']); // Get all schedules with filters
-        Route::get('/schedule/{id}', [AdminSchedulesController::class, 'show']); // Get a single schedule
+    // Schedules
+    Route::prefix('schedules')->group(function () {
+        Route::get('/', [AdminSchedulesController::class, 'index']);
+        Route::get('/{id}', [AdminSchedulesController::class, 'show']);
     });
 });
-
-
-

@@ -10,12 +10,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// For web routes
+// Route to clear cache
 Route::get('/clear-cache', [SystemSettingController::class, 'clearCache']);
 
-
+// Route to send a test email
 Route::get('send-test-email', function () {
-    $email = 'freelancernishad123@gmail.com';  // Enter your test email here
+    $email = 'freelancernishad123@gmail.com'; // Enter your test email here
 
     try {
         Mail::to($email)->send(new TestMail());
@@ -23,11 +23,9 @@ Route::get('send-test-email', function () {
     } catch (\Exception $e) {
         return response()->json('Error: ' . $e->getMessage());
     }
-
 });
 
-
-
+// Route to serve files from the 'protected' disk
 Route::get('/files/{path}', function ($path) {
     try {
         // Check if the file exists in the protected disk
@@ -37,10 +35,10 @@ Route::get('/files/{path}', function ($path) {
             ], 404);
         }
 
-        // Serve the file directly with custom headers
+        // Serve the file with custom headers
         return response()->file(Storage::disk('protected')->path($path))
             ->withHeaders([
-                'Content-Type' => 'application/octet-stream',  // Adjust MIME type if needed
+                'Content-Type' => 'application/octet-stream', // Adjust MIME type if needed
                 'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'Pragma' => 'no-cache',
                 'Expires' => '0',
@@ -51,6 +49,3 @@ Route::get('/files/{path}', function ($path) {
         ], 500);
     }
 })->where('path', '.*');
-
-
-
