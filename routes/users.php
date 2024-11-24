@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Auth\User\AuthUserController;
 use App\Http\Controllers\Api\Auth\User\VerificationController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
+use App\Http\Controllers\Api\User\UserManagement\UserProfileController;
 use App\Http\Controllers\Api\User\Package\UserPurchasedHistoryController;
 use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
 use App\Http\Controllers\Api\User\SocialMedia\UserSocialMediaLinkController;
@@ -31,6 +32,10 @@ Route::prefix('user')->group(function () {
     Route::middleware(AuthenticateUser::class)->group(function () {
 
 ////// auth routes
+
+        Route::get('/profile', [UserProfileController::class, 'getProfile']);
+        Route::post('/profile', [UserProfileController::class, 'updateProfile']);
+
 
 
         Route::post('package/subscribe', [UserPackageController::class, 'packagePurchase']);

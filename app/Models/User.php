@@ -20,6 +20,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'profile_picture',
         'password',
         'email_verification_hash',
         'otp',
@@ -34,6 +35,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verification_hash',
+        'otp',
+        'otp_expires_at',
     ];
 
     /**
@@ -82,5 +86,16 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         $package = $this->currentPackage();
         return $package && in_array($feature, $package->features);
     }
+
+
+    public function saveProfilePicture($file)
+    {
+        $filePath = uploadFileToS3($file, 'profile_pictures'); // Define the S3 directory
+        $this->profile_picture = $filePath;
+        $this->save();
+
+        return $filePath;
+    }
+
 
 }
