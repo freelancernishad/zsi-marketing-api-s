@@ -80,7 +80,7 @@ class AuthUserController extends Controller
             'email' => $user->email,
             'name' => $user->name,
             'category' => $user->category ?? null, // Include category if applicable
-            'email_verified' => $user->hasVerifiedEmail(), // Check verification status
+            'email_verified_at' => $user->hasVerifiedEmail(), // Check verification status
         ];
 
         return response()->json([
@@ -118,7 +118,7 @@ class AuthUserController extends Controller
                 'email' => $user->email,
                 'name' => $user->name,
                 'category' => $user->category,
-                'email_verified' => $user->hasVerifiedEmail(), // Checks verification status
+                'email_verified_at' => $user->hasVerifiedEmail(), // Checks verification status
             ];
 
             try {

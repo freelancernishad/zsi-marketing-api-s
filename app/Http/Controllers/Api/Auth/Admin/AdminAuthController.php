@@ -43,7 +43,7 @@ class AdminAuthController extends Controller
         $payload = [
             'email' => $admin->email,
             'name' => $admin->name,
-            'email_verified' => $admin->hasVerifiedEmail(),
+            'email_verified_at' => $admin->hasVerifiedEmail(),
             // Add additional fields as necessary
         ];
 
@@ -86,7 +86,7 @@ class AdminAuthController extends Controller
             $payload = [
                 'email' => $admin->email,
                 'name' => $admin->name,
-                'email_verified' => $admin->hasVerifiedEmail(),
+                'email_verified_at' => $admin->hasVerifiedEmail(),
                 // Add additional fields as necessary
             ];
 
