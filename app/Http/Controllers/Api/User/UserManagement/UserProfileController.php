@@ -34,6 +34,15 @@ class UserProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
             'profile_picture' => 'sometimes|image|max:2048',
+
+
+            'phone' => 'sometimes|string|max:15',
+            'business_name' => 'sometimes|string|max:255',
+            'country' => 'sometimes|string|max:255',
+            'state' => 'sometimes|string|max:255',
+            'city' => 'sometimes|string|max:255',
+            'region' => 'sometimes|string|max:255',
+            'zip_code' => 'sometimes|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -41,7 +50,21 @@ class UserProfileController extends Controller
         }
 
         // Update user's profile with validated data
-        $user->update($request->only(['name']));
+        $user->update($request->only([
+            'name',
+            'phone',
+            'business_name',
+            'country',
+            'state',
+            'city',
+            'region',
+            'zip_code',
+        ]));
+
+
+
+
+
 
 
             // Handle profile picture upload if provided
