@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Auth\User\AuthUserController;
 use App\Http\Controllers\Api\Auth\User\VerificationController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
+use App\Http\Controllers\Api\User\Schedules\UserSchedulesController;
 use App\Http\Controllers\Api\User\UserManagement\UserProfileController;
 use App\Http\Controllers\Api\User\Package\UserPurchasedHistoryController;
 use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
@@ -50,6 +51,12 @@ Route::prefix('user')->group(function () {
 
         Route::get('/packages/history', [UserPurchasedHistoryController::class, 'getPurchasedHistory']);
         Route::get('/packages/history/{id}', [UserPurchasedHistoryController::class, 'getSinglePurchasedHistory']);
+
+
+
+            Route::post('/schedule', [UserSchedulesController::class, 'create']); // Create a new schedule
+            Route::get('/schedules', [UserSchedulesController::class, 'index']); // Get authenticated user's schedules
+            Route::get('/schedule/{id}', [UserSchedulesController::class, 'show']); // Get a specific schedule
 
 
 

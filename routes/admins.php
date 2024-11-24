@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Auth\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\Package\AdminPackageController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 use App\Http\Controllers\Api\Auth\Admin\AdminResetPasswordController;
+use App\Http\Controllers\Api\Admin\Schedules\AdminSchedulesController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\Package\AdminPurchasedHistoryController;
 use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
@@ -99,7 +100,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/package/purchased-history', [AdminPurchasedHistoryController::class, 'getAllHistory']);
         Route::get('/package/purchased-history/{id}', [AdminPurchasedHistoryController::class, 'getSingleHistory']);
 
-
+        Route::get('/schedules', [AdminSchedulesController::class, 'index']); // Get all schedules with filters
+        Route::get('/schedule/{id}', [AdminSchedulesController::class, 'show']); // Get a single schedule
     });
 });
 

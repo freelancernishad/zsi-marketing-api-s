@@ -65,4 +65,13 @@ class Admin extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+
+    /**
+     * Get all schedules managed by the admin.
+     */
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
 }
