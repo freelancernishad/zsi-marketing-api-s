@@ -41,7 +41,7 @@ class VerificationController extends Controller
                     'name' => $user->name,
                     'username' => $user->username,
                     'step' => $user->step,
-                    'email_verified_at' => true, // Email was already verified
+                    'email_verified' => true, // Email was already verified
                 ],
                 'token' => $token // Return the new token
             ], 200);
@@ -60,7 +60,7 @@ class VerificationController extends Controller
                 'name' => $user->name,
                 'username' => $user->username,
                 'step' => $user->step,
-                'email_verified_at' => true, // Email was already verified
+                'email_verified' => true, // Email was already verified
             ],
             'token' => $token // Return the new token
         ], 200);
@@ -102,7 +102,7 @@ class VerificationController extends Controller
                         'name' => $user->name,
                         'username' => $user->username,
                         'step' => $user->step,
-                        'email_verified_at' => true, // Email was already verified
+                        'email_verified' => true, // Email was already verified
                     ],
                     'token' => $token // Return the new token
                 ], 200);
@@ -132,7 +132,7 @@ class VerificationController extends Controller
                     'name' => $user->name,
                     'username' => $user->username,
                     'step' => $user->step,
-                    'email_verified_at' => true, // Email was verified
+                    'email_verified' => true, // Email was verified
                 ],
                 'token' => $token // Return the new token
             ], 200);
