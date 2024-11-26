@@ -89,7 +89,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         return $this->hasOne(UserPackage::class);
     }
 
-    public function userBuyPackage()
+    public function userPackagePackagesHistory()
     {
         return $this->hasMany(UserPackage::class);
     }
