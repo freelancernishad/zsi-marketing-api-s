@@ -65,6 +65,7 @@ class UserController extends Controller
     // Show user details
     public function show(User $user)
     {
+        $user->load(['userPackage.addons','userPackage.package']);
         return response()->json($user);
     }
 
