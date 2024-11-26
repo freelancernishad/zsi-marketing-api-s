@@ -62,12 +62,27 @@ class UserController extends Controller
     }
 
 
-    // Show user details
     public function show(User $user)
     {
-        $user->load(['userPackage.addons','userPackage.package']);
+        // Load the 'userBuyPackage' relationship and its nested relations
+        $user->load([
+            'userBuyPackage.addons.addon' => function ($query) {
+                $query->select('id', 'addon_name', 'price'); // Select specific fields for the addon details
+            },
+            'userBuyPackage.package:id,name,price', // Load package data with selected fields
+        ]);
+
+        // Dynamically hide fields in the 'package' relation
+        foreach ($user->userBuyPackage as $userPackage) {
+            if ($userPackage->package) {
+                $userPackage->package->makeHidden(['discounts', 'discounted_price']);
+            }
+        }
+
         return response()->json($user);
     }
+
+
 
     // Update a user
     public function update(Request $request, User $user)

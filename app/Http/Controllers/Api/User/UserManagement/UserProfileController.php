@@ -17,8 +17,25 @@ class UserProfileController extends Controller
     public function getProfile()
     {
         $user = Auth::user(); // Retrieve the authenticated user
+
+        // Load the 'userBuyPackage' relationship and its nested relations
+        $user->load([
+            'userBuyPackage.addons.addon' => function ($query) {
+                $query->select('id', 'addon_name', 'price'); // Select specific fields for the addon details
+            },
+            'userBuyPackage.package:id,name,price', // Load package data with selected fields
+        ]);
+
+        // Dynamically hide fields in the 'package' relation
+        foreach ($user->userBuyPackage as $userPackage) {
+            if ($userPackage->package) {
+                $userPackage->package->makeHidden(['discounts', 'discounted_price']);
+            }
+        }
+
         return response()->json($user);
     }
+
 
     /**
      * Update the authenticated user's profile.
