@@ -27,50 +27,56 @@ class UserProfileController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function updateProfile(Request $request)
-{
-    $user = Auth::user(); // Retrieve the authenticated user
+    {
+        $user = Auth::user(); // Retrieve the authenticated user
 
-    // Validate input
-    $validator = Validator::make($request->all(), [
-        'name' => 'nullable|string|max:255',
-        'profile_picture' => 'nullable|image|max:2048',
-        'phone' => 'nullable|string|max:15',
-        'business_name' => 'nullable|string|max:255',
-        'country' => 'nullable|string|max:255',
-        'state' => 'nullable|string|max:255',
-        'city' => 'nullable|string|max:255',
-        'region' => 'nullable|string|max:255',
-        'zip_code' => 'nullable|string|max:20',
-    ]);
+        // Validate input
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|max:2048',
+            'phone' => 'nullable|string|max:15',
+            'business_name' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'zip_code' => 'nullable|string|max:20',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 422);
-    }
-
-    // Update user's profile with validated data
-    $user->update($request->only([
-        'name',
-        'phone',
-        'business_name',
-        'country',
-        'state',
-        'city',
-        'region',
-        'zip_code',
-    ]));
-
-    // Handle profile picture upload if provided
-    if ($request->hasFile('profile_picture')) {
-        try {
-            $filePath = $user->saveProfilePicture($request->file('profile_picture'));
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to upload profile picture: ' . $e->getMessage(),
-            ], 500);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
+
+        // Filter out null or blank values
+        $filteredData = collect($request->only([
+            'name',
+            'phone',
+            'business_name',
+            'country',
+            'state',
+            'city',
+            'region',
+            'zip_code',
+        ]))->filter(function ($value) {
+            return $value !== null && $value !== '';
+        })->toArray();
+
+        // Update user's profile with filtered data
+        $user->update($filteredData);
+
+        // Handle profile picture upload if provided
+        if ($request->hasFile('profile_picture')) {
+            try {
+                $filePath = $user->saveProfilePicture($request->file('profile_picture'));
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Failed to upload profile picture: ' . $e->getMessage(),
+                ], 500);
+            }
+        }
+
+        return response()->json($user);
     }
 
-    return response()->json($user);
-}
 
 }
