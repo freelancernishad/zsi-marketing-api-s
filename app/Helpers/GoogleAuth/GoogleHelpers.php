@@ -46,6 +46,8 @@ function handleGoogleAuth(Request $request)
                 'password' => Hash::make(Str::random(16)), // Generate a random password
                 'email_verified_at' => now(),
             ]);
+        }else{
+            $user->update(['email_verified_at'=> now()]);
         }
 
         // Authenticate the user
