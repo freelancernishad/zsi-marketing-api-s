@@ -49,7 +49,7 @@ class AdminPackageController extends Controller
     {
         $rules =  [
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'duration_days' => 'nullable|integer|min:1',
             'features' => 'required|array',
