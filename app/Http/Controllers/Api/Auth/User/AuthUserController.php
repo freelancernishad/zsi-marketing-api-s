@@ -99,6 +99,13 @@ class AuthUserController extends Controller
     public function login(Request $request)
     {
 
+
+        if($request->access_token){
+
+            return handleGoogleAuth($request);
+        }
+
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'password' => 'required|string',
@@ -107,6 +114,9 @@ class AuthUserController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
+
+
+
 
         $credentials = $request->only('email', 'password');
 
