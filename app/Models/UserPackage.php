@@ -63,14 +63,6 @@ class UserPackage extends Model
      */
     public function payments()
     {
-        // Corrected 'hasManyThrough' to link `Payment` via `UserPackageAddon`
-        return $this->hasManyThrough(
-            Payment::class,
-            UserPackageAddon::class,
-            'purchase_id',  // Foreign key on UserPackageAddon to UserPackage
-            'id',               // Foreign key on Payment to be matched
-            'id',               // Local key on UserPackage to be matched
-            'payment_id'        // Foreign key in UserPackageAddon for Payment
-        );
+        return $this->hasMany(Payment::class);
     }
 }

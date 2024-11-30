@@ -33,7 +33,8 @@
             "app/Helpers/Gateways/Stripe.php",
             "app/Helpers/FileSystem/FileHelper.php",
             "app/Helpers/Package/PackageHelpers.php",
-            "app/Helpers/GoogleAuth/GoogleHelpers.php"
+            "app/Helpers/GoogleAuth/GoogleHelpers.php",
+            "app/Helpers/DashboardMetrics/DashboardMetricsHelpers.php"
         ]
     },
     "autoload-dev": {

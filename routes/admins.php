@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Admin\Schedules\AdminSchedulesController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\Package\AdminPurchasedHistoryController;
 use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
+use App\Http\Controllers\Api\Admin\DashboardMetrics\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\SocialMedia\AdminSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
 
@@ -41,6 +42,9 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::put('/{id}', [AllowedOriginController::class, 'update']);
         Route::delete('/{id}', [AllowedOriginController::class, 'destroy']);
     });
+
+    // Dashboard
+    Route::get('dashboard', [AdminDashboardController::class, 'index']);
 
     // User Management
     Route::prefix('users')->group(function () {

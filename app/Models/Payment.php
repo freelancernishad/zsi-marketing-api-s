@@ -11,7 +11,7 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id', 'gateway', 'transaction_id', 'currency', 'amount', 'fee',
-        'status', 'response_data', 'payment_method', 'payer_email', 'paid_at','coupon_id','payable_type','payable_id'
+        'status', 'response_data', 'payment_method', 'payer_email', 'paid_at','coupon_id','payable_type','payable_id','user_package_id'
     ];
 
     protected $casts = [
@@ -41,6 +41,10 @@ class Payment extends Model
         return $this->belongsTo(Coupon::class);
     }
 
+    public function userPackage()
+    {
+        return $this->belongsTo(UserPackage::class);
+    }
 
 
         /**
@@ -98,6 +102,7 @@ class Payment extends Model
     {
         return $query->where('payable_type', $payableType)->where('payable_id', $payableId);
     }
+
 
 
 

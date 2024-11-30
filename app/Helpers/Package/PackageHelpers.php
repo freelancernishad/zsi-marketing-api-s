@@ -35,6 +35,7 @@ function PackageSubscribe($package_id, $user_id = null)
                     ->where('package_id', $package_id)
                     ->update(['purchase_id' => $userPackage->id]);
 
+    return $userPackage->id;
     return response()->json(['message' => 'Successfully subscribed to the package']);
 }
 
