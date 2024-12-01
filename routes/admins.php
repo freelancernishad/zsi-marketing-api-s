@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AllowedOriginController;
 use App\Http\Controllers\Api\Coupon\CouponController;
 use App\Http\Controllers\Api\Admin\Users\UserController;
 use App\Http\Controllers\Api\Auth\Admin\AdminAuthController;
+use App\Http\Controllers\Api\Admin\Careers\JobApplyController;
 use App\Http\Controllers\Api\Admin\Package\AdminPackageController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 use App\Http\Controllers\Api\Admin\Careers\Jobs\CareersJobController;
@@ -128,6 +129,11 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::delete('/{id}', [CareersJobController::class, 'destroy']); // Delete a job
     });
 
+    Route::prefix('careers')->group(function () {
+        // JobApply routes
+        Route::get('job-applies', [JobApplyController::class, 'index']); // List Job Applications with Pagination
+        Route::post('job-applies/{id}/status', [JobApplyController::class, 'changeStatus']); // Change Job Application Status
+    });
 
 
 

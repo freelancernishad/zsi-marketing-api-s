@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Global\JobApplyController;
 use App\Http\Controllers\Api\Server\ServerStatusController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\User\PackageAddon\UserPackageAddonController;
@@ -34,3 +35,8 @@ Route::prefix('global')->group(function () {
     Route::get('package-addons', [UserPackageAddonController::class, 'index']); // List all addons
     Route::get('package-addons/{id}', [UserPackageAddonController::class, 'show']); // Get a specific addon
 });
+
+
+
+Route::post('/global/job-apply', [JobApplyController::class, 'store']);
+Route::get('/global/job-apply/{application_id}', [JobApplyController::class, 'searchByApplicationId']);
