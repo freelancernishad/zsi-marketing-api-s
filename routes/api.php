@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Global\JobApplyController;
 use App\Http\Controllers\Api\Server\ServerStatusController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
+use App\Http\Controllers\Api\Admin\Careers\Jobs\CareersJobController;
 use App\Http\Controllers\Api\User\PackageAddon\UserPackageAddonController;
 
 // Load additional route files
@@ -38,5 +39,6 @@ Route::prefix('global')->group(function () {
 
 
 
+Route::get('/global/careers/jobs', [CareersJobController::class, 'index']);
 Route::post('/global/job-apply', [JobApplyController::class, 'store']);
 Route::get('/global/job-apply/{application_id}', [JobApplyController::class, 'searchByApplicationId']);
