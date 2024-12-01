@@ -37,6 +37,7 @@ class ApiResponse
                 // 'encoded' => [
                     'data' => $responseData,
                     'isError' => false,
+                    'message' =>  $responseData['message'] ?? 'Success',
                     'error' => null,
                     'status_code' => $response->status(),
                 // ],

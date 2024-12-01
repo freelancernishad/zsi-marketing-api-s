@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\Users\UserController;
 use App\Http\Controllers\Api\Auth\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\Package\AdminPackageController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
+use App\Http\Controllers\Api\Admin\Careers\Jobs\CareersJobController;
 use App\Http\Controllers\Api\Auth\Admin\AdminResetPasswordController;
 use App\Http\Controllers\Api\Admin\Schedules\AdminSchedulesController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
@@ -117,4 +118,17 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::get('/', [AdminSchedulesController::class, 'index']);
         Route::get('/{id}', [AdminSchedulesController::class, 'show']);
     });
+
+
+    Route::prefix('careers/jobs')->group(function () {
+        Route::get('/', [CareersJobController::class, 'index']); // List all jobs
+        Route::post('/', [CareersJobController::class, 'store']); // Create a new job
+        Route::get('/{id}', [CareersJobController::class, 'show']); // Show a specific job
+        Route::put('/{id}', [CareersJobController::class, 'update']); // Update a job
+        Route::delete('/{id}', [CareersJobController::class, 'destroy']); // Delete a job
+    });
+
+
+
+
 });
