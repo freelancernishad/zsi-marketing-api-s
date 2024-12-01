@@ -37,7 +37,7 @@ class CreateJobAppliesTable extends Migration
             $table->boolean('show_on_career_page')->default(true);
             $table->string('requested_origin')->nullable();
             $table->string('application_id')->unique();
-            $table->foreignId('careers_job_id')->unique()->constrained('careers_jobs')->onDelete('cascade'); // Add foreign key for CareersJob
+            $table->foreignId('careers_job_id')->nullable()->constrained('careers_jobs')->onDelete('cascade'); // Add foreign key for CareersJob
 
             $table->timestamps();
         });
