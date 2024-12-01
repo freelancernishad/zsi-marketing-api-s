@@ -40,5 +40,6 @@ Route::prefix('global')->group(function () {
 
 
 Route::get('/global/careers/jobs', [CareersJobController::class, 'index']);
+Route::get('/global/careers/jobs/{id}', [CareersJobController::class, 'show']);
 Route::post('/global/job-apply', [JobApplyController::class, 'store']);
 Route::get('/global/job-apply/{application_id}', [JobApplyController::class, 'searchByApplicationId']);
