@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin\Careers;
 
-use App\Http\Controllers\Controller;
 use App\Models\JobApply;
 use Illuminate\Http\Request;
+use App\Exports\JobApplyExport;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 
 class JobApplyController extends Controller
@@ -86,4 +90,40 @@ class JobApplyController extends Controller
             'data' => $jobApply
         ]);
     }
+
+
+
+  /**
+     * Export job applications to Excel (only for admins).
+     */
+    public function exportToExcel(Request $request)
+    {
+        // Get token from URL query parameter (for example, ?token=your_token)
+        $token = $request->query('token');
+
+        if (!$token) {
+            return response()->json(['error' => 'No token provided.'], 400);
+        }
+
+        try {
+            // Validate and authenticate the token for the admin guard
+            $admin = JWTAuth::setToken($token)->authenticate();
+
+            if (!$admin) {
+                return response()->json(['error' => 'Unauthorized. Invalid token.'], 403);
+            }
+
+            // Check if the authenticated user has admin privileges
+            // If your Admin model doesn't have an 'is_admin' field or other check, just proceed with the assumption the token is for an admin.
+            // You could also check other properties here if needed (e.g., roles).
+
+            // If everything is valid, allow the export
+            return Excel::download(new JobApplyExport, 'job_applications.xlsx');
+        } catch (\Exception $e) {
+            // Log the error (for debugging)
+            Log::error('Error authenticating JWT for admin: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to authenticate token.'], 500);
+        }
+    }
+
 }

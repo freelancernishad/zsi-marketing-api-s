@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class ApiResponse
@@ -18,12 +19,11 @@ class ApiResponse
     public function handle(Request $request, Closure $next)
     {
 
-        // Skip ApiResponse middleware for the /files/{path} route
-        if ($request->is('files/*')) {
-
-            return $next($request);
-        }
-
+        Log::info($request->all());
+    // Skip ApiResponse middleware for the /files/* route and /api/admin/careers/job-applies/export route
+    if ($request->is('files/*') || $request->is('api/careers/job-applies/export')) {
+        return $next($request);
+    }
         // Capture the response
         $response = $next($request);
 

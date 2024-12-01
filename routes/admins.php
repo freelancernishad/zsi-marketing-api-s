@@ -138,3 +138,8 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
 
 
 });
+
+Route::prefix('careers')->group(function () {
+    Route::get('job-applies/export', [JobApplyController::class, 'exportToExcel']);
+});
+
