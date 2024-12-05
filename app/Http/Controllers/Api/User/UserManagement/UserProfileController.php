@@ -24,6 +24,7 @@ class UserProfileController extends Controller
                 $query->select('id', 'addon_name', 'price'); // Select specific fields for the addon details
             },
             'userPackagePackagesHistory.package:id,name,price', // Load package data with selected fields
+            'userPackagePackagesHistory.payments',
         ]);
 
         // Dynamically hide fields in the 'package' relation
