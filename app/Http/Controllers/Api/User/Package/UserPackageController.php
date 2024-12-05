@@ -21,7 +21,7 @@ class UserPackageController extends Controller
     public function index(Request $request)
     {
         // Get the list of all packages with features, discount rate, and discounted price
-        $packages = Package::all()->makeHidden(['discounts']);
+        $packages = Package::orderBy('index_no','asc')->get()->makeHidden(['discounts']);
 
         // Return the list of packages with calculated discount details
         return response()->json($packages);

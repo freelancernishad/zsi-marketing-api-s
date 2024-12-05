@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Package extends Model
 {
-    protected $fillable = ['name', 'description', 'price', 'duration_days', 'features'];
+    protected $fillable = ['name', 'description', 'price', 'duration_days', 'features', 'index_no'];
 
     // Accessor to get features as an array
     public function getFeaturesAttribute($value)
