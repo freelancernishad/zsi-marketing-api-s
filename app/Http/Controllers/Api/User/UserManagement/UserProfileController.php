@@ -17,37 +17,34 @@ class UserProfileController extends Controller
     public function getProfile()
     {
         $user = Auth::user(); // Retrieve the authenticated user
-    
+
         // Load relationships with specific fields
         $user->load([
             'userPackagePackagesHistory.addons.addon' => function ($query) {
-                $query->select('id', 'addon_name', 'price'); // Only fetch these fields
+                $query->select('id', 'addon_name', 'price'); // Fetch only necessary fields
             },
-            'userPackagePackagesHistory.package:id,name,price', // Select package fields
+            'userPackagePackagesHistory.package:id,name,price',
             'userPackagePackagesHistory.payments',
         ]);
-    
-        // Transform addons structure
+
+        // Flatten addons to only include 'addon' object
         foreach ($user->userPackagePackagesHistory as $userPackage) {
             if ($userPackage->addons) {
                 $userPackage->addons = $userPackage->addons->map(function ($addon) {
-                    return [
-                        'id' => $addon->addon->id,
-                        'addon_name' => $addon->addon->addon_name,
-                        'price' => $addon->addon->price,
-                    ];
+                    return $addon->addon; // Return the addon object directly
                 });
             }
-    
+
             // Hide unwanted fields in the 'package' relation if it exists
             if ($userPackage->package) {
                 $userPackage->package->makeHidden(['discounts', 'discounted_price']);
             }
         }
-    
+
         return response()->json($user);
     }
-    
+
+
 
 
     /**
