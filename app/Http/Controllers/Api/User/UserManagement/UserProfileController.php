@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Api\User\UserManagement;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,30 +21,19 @@ class UserProfileController extends Controller
 
         // Load the necessary relationships
         $user->load([
-            'userPackagePackagesHistory.addons.addon' => function ($query) {
-                $query->select('id', 'addon_name', 'price'); // Only select required fields for the addon
-            },
-            'userPackagePackagesHistory.package:id,name,price',
+            'userPackagePackagesHistory.addons.addon:id,addon_name,price', // Load addon details only
+            'userPackagePackagesHistory.package:id,name,price', // Load package details
             'userPackagePackagesHistory.payments',
         ]);
 
-        // Iterate and transform addons
-        foreach ($user->userPackagePackagesHistory as $userPackage) {
-            if ($userPackage->addons) {
-                // Replace addons with the extracted addon details only
-                $userPackage->addons = $userPackage->addons->map(function ($addonRelation) {
-                    return [
-                        'id' => $addonRelation->addon->id,
-                        'addon_name' => $addonRelation->addon->addon_name,
-                        'price' => $addonRelation->addon->price,
-                    ];
-                });
-            }
-        }
-
-
+        // Return the response in the expected format
         return response()->json($user);
     }
+
+
+
+
+
 
 
 
