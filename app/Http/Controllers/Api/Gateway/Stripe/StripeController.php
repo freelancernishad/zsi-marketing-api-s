@@ -75,8 +75,9 @@ class StripeController extends Controller
                     // Find the payment record and update status
                     $payment = Payment::where('session_id', $session->id)->first();
                     if ($payment) {
+                        $paymentIntentId = $session->payment_intent;
                         $payment->update([
-                            'transaction_id' => $event->data->payment_intent,
+                            'transaction_id' => $paymentIntentId,
                             'status' => 'completed',
                             'paid_at' => now(),
                             'response_data' => json_encode($event),
