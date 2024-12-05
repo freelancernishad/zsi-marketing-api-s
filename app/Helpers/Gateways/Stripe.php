@@ -130,7 +130,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
         ]);
 
         // Update the payment with the transaction ID (Stripe session ID)
-        $payment->update(['transaction_id' => $session->id]);
+        $payment->update(['session_id' => $session->id]);
 
         return response()->json(['session_url' => $session->url]);
     } catch (\Exception $e) {
