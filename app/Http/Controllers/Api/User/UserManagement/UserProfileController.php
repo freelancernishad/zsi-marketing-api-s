@@ -18,7 +18,7 @@ class UserProfileController extends Controller
     {
         $user = Auth::user(); // Retrieve the authenticated user
     
-        // Load relationships with specific fields
+        // Load relationships
         $user->load([
             'userPackagePackagesHistory.addons.addon' => function ($query) {
                 $query->select('id', 'addon_name', 'price'); // Fetch only necessary fields
@@ -27,14 +27,14 @@ class UserProfileController extends Controller
             'userPackagePackagesHistory.payments',
         ]);
     
-        // Transform addons to only include the 'addon' object
+        // Transform addons to only return 'addon' details without extra fields
         foreach ($user->userPackagePackagesHistory as $userPackage) {
             if ($userPackage->addons) {
-                $userPackage->addons = $userPackage->addons->map(function ($addon) {
+                $userPackage->addons = $userPackage->addons->pluck('addon')->map(function ($addon) {
                     return [
-                        'id' => $addon->addon->id,
-                        'addon_name' => $addon->addon->addon_name,
-                        'price' => $addon->addon->price,
+                        'id' => $addon->id,
+                        'addon_name' => $addon->addon_name,
+                        'price' => $addon->price,
                     ];
                 });
             }
@@ -47,6 +47,7 @@ class UserProfileController extends Controller
     
         return response()->json($user);
     }
+    
     
 
 
