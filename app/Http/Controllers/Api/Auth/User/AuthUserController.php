@@ -98,13 +98,9 @@ class AuthUserController extends Controller
      */
     public function login(Request $request)
     {
-
-
-        if($request->access_token){
-
+        if ($request->access_token) {
             return handleGoogleAuth($request);
         }
-
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
@@ -115,20 +111,31 @@ class AuthUserController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-
-
-
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // Custom payload data, including email verification status
+            // Check if the email is verified
+            if (!$user->hasVerifiedEmail()) {
+                // Generate a new OTP
+                $otp = random_int(100000, 999999);
+                $user->otp = Hash::make($otp); // Hash the OTP before storing
+                $user->otp_expires_at = now()->addMinutes(5); // Set OTP expiration
+                $user->save();
+
+                // Send the OTP to the user via email
+                Mail::to($user->email)->send(new OtpNotification($otp));
+
+
+            }
+
+            // Custom payload data
             $payload = [
                 'email' => $user->email,
                 'name' => $user->name,
                 'category' => $user->category,
-                'email_verified' => $user->hasVerifiedEmail(), // Checks verification status
+                'email_verified' => $user->hasVerifiedEmail(), // Email verification status
             ];
 
             try {
@@ -146,6 +153,7 @@ class AuthUserController extends Controller
 
         return response()->json(['message' => 'Invalid credentials'], 401);
     }
+
 
 
 
