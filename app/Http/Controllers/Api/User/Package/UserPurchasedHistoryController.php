@@ -61,7 +61,7 @@ class UserPurchasedHistoryController extends Controller
 
         // Retrieve the UserPackage with related data
         $userPackage = UserPackage::with([
-            'package:id,name,price',     // Load the package relationship with specific fields
+            'package:id,name,price,features',     // Load the package relationship with specific fields
             'addons' => function ($query) {  // Limit the fields loaded for the addons
                 $query->select('id', 'user_id', 'package_id', 'addon_id', 'purchase_id');
             },
@@ -76,7 +76,7 @@ class UserPurchasedHistoryController extends Controller
         }
 
         // Hide unnecessary fields from the package
-        $userPackage->package->makeHidden(['discounts', 'discounted_price', 'features']);
+        $userPackage->package->makeHidden(['discounts', 'discounted_price']);
 
         // Return the result as a JSON response
         return response()->json($userPackage);

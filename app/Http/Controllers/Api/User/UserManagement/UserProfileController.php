@@ -25,7 +25,6 @@ class UserProfileController extends Controller
             'userPackagePackagesHistory.package:id,name,price,features', // Load package details
             'userPackagePackagesHistory.payments',
         ]);
-
         // Return the response in the expected format
         return response()->json($user);
     }
