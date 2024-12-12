@@ -5,7 +5,7 @@ use App\Models\UserPackage;
 use App\Models\UserPackageAddon;
 use Illuminate\Support\Facades\Auth;
 
-function PackageSubscribe($package_id, $user_id = null)
+function PackageSubscribe($package_id, $user_id = null,$business_name= null)
 {
     // Fetch package
     $package = Package::find($package_id);
@@ -25,6 +25,7 @@ function PackageSubscribe($package_id, $user_id = null)
     // Create and assign the package to the user
     $userPackage = new UserPackage();
     $userPackage->user_id = $userId;
+    $userPackage->business_name = $business_name;
     $userPackage->package_id = $package->id;
     $userPackage->started_at = now();
     $userPackage->ends_at = now()->addDays($package->duration_days);

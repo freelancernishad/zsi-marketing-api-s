@@ -85,7 +85,7 @@ class StripeController extends Controller
 
                         // Check if payable type is "package" and call PackageSubscribe
                         if ($payment->payable_type === 'Package') {
-                           $userPackageId =  PackageSubscribe($payment->payable_id,$payment->user_id);
+                           $userPackageId =  PackageSubscribe($payment->payable_id,$payment->user_id,$payment->business_name);
                            $payment->update([
                              'user_package_id' => $userPackageId,
                             ]);
@@ -105,7 +105,7 @@ class StripeController extends Controller
 
                         // Check if payable type is "package" and call PackageSubscribe
                         if ($payment->payable_type === 'Package') {
-                            PackageSubscribe($payment->payable_id);
+                            PackageSubscribe($payment->payable_id,$payment->user_id,$payment->business_name);
                         }
                     }
                     break;

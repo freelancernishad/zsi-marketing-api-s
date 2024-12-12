@@ -54,6 +54,7 @@ class UserPackageController extends Controller
     {
         // Validation rules
         $validator = Validator::make($request->all(), [
+            'business_name' => 'nullable|string',
             'currency' => 'nullable|string|in:USD,EUR,GBP', // Add other currencies if needed
             'payable_type' => 'required|string|in:Package', // Ensure payable type is Package (extend as necessary)
             'payable_id' => 'required|exists:packages,id', // Ensure the package exists
@@ -73,6 +74,7 @@ class UserPackageController extends Controller
         // Extract validated data
         $userId = auth()->id(); // Use authenticated user's ID
         $currency = $request->currency ?? 'USD'; // Default currency to USD
+        $business_name = $request->business_name ?? ''; // Default currency to USD
         $payableType = $request->payable_type;
         $payableId = $request->payable_id;
         $addonIds = $request->addon_ids ?? []; // Default to empty array if no addon IDs are provided
@@ -101,6 +103,7 @@ class UserPackageController extends Controller
                 'user_id' => $userId,
                 'amount' => $amount,
                 'currency' => $currency,
+                'business_name' => $business_name,
                 'payable_type' => $payableType,
                 'payable_id' => $payableId,
                 'addon_ids' => $addonIds,

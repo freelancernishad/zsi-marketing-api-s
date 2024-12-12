@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserPackage extends Model
 {
-    protected $fillable = ['user_id', 'package_id', 'started_at', 'ends_at'];
+    protected $fillable = ['user_id', 'package_id', 'started_at', 'ends_at', 'business_name'];
 
     /**
      * Relationship: A UserPackage belongs to a User.

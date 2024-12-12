@@ -17,6 +17,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
     $couponId = $data['coupon_id'] ?? null;
     $payableType = $data['payable_type'] ?? null;
     $payableId = $data['payable_id'] ?? null;
+    $business_name = $data['business_name'] ?? null;
     $addonIds = $data['addon_ids'] ?? []; // Addon IDs, if provided
 
     $baseSuccessUrl = $data['success_url'] ?? 'http://localhost:8000/stripe/payment/success';
@@ -50,6 +51,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
         'transaction_id' => uniqid(),
         'payable_type' => $payableType,
         'payable_id' => $payableId,
+        'business_name' => $business_name,
         'coupon_id' => $couponId,
     ]);
 
