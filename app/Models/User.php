@@ -123,4 +123,16 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     {
         return $this->hasMany(Schedule::class);
     }
+
+
+    public function getBusinessNameAttribute($value)
+    {
+        return json_decode($value, true) ?? [];
+    }
+
+    public function setBusinessNameAttribute($value)
+    {
+        $this->attributes['business_name'] = $value;
+    }
+
 }

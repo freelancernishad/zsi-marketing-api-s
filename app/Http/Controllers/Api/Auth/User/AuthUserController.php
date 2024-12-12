@@ -12,8 +12,9 @@ use App\Models\TokenBlacklist;
 
 
 use Tymon\JWTAuth\Facades\JWTAuth;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -69,7 +70,16 @@ class AuthUserController extends Controller
             $user->save();
 
             // Notify user with the OTP
-            Mail::to($user->email)->send(new OtpNotification($otp));
+            // Mail::to($user->email)->send(new OtpNotification($otp));
+            try {
+                Mail::to($user->email)->send(new OtpNotification($otp));
+            } catch (\Exception $e) {
+                // Log the error for debugging purposes
+                Log::error('Failed to send OTP email: ' . $e->getMessage());
+
+                // Optionally, you can ignore or handle the error as per your requirement
+                // Example: Return a response or continue with the process
+            }
 
         }
 
@@ -125,7 +135,16 @@ class AuthUserController extends Controller
                 $user->save();
 
                 // Send the OTP to the user via email
-                Mail::to($user->email)->send(new OtpNotification($otp));
+                // Mail::to($user->email)->send(new OtpNotification($otp));
+                try {
+                    Mail::to($user->email)->send(new OtpNotification($otp));
+                } catch (\Exception $e) {
+                    // Log the error for debugging purposes
+                    Log::error('Failed to send OTP email: ' . $e->getMessage());
+
+                    // Optionally, you can ignore or handle the error as per your requirement
+                    // Example: Return a response or continue with the process
+                }
 
 
             }
