@@ -26,7 +26,7 @@ class UserProfileController extends Controller
             'userPackagePackagesHistory.payments',
         ]);
         // Return the response in the expected format
-        return response()->json($user);
+        return response()->json($user->toArray());
     }
 
 
