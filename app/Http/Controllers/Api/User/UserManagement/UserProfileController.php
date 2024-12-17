@@ -99,7 +99,7 @@ class UserProfileController extends Controller
         }
     }
 
-    return response()->json($user);
+    return response()->json($user->toArray());
 }
 
 
