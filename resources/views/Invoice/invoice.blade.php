@@ -146,11 +146,33 @@
             <tr>
                 <td class="customer-column">
                     <h3>Customer Details</h3>
-                    <span>{{ $data->user->name }}</span><br>
+
+
+                    @if($data->user->name)
+                        <span>{{ $data->user->name }}</span><br>
+                    @endif
+
+                    @if($data->user->email)
                     <span>{{ $data->user->email }}</span><br>
-                    <span>{{ $data->user->phone }}</span><br>
-                    <span>{{ $data->user->city }}, {{ $data->user->state }}, {{ $data->user->country }}</span><br>
-                    <span>{{ $data->business_name }}</span>
+                    @endif
+
+                    @if($data->user->phone)
+                        <span>{{ $data->user->phone }}</span><br>
+                    @endif
+
+                    @if($data->user->city || $data->user->state || $data->user->country)
+                        <span>{{ $data->user->city }}, {{ $data->user->state }}, {{ $data->user->country }}</span><br>
+                    @endif
+
+
+                    @if($data->business_name)
+                        <span>{{ $data->business_name }}</span>
+                    @endif
+
+                    
+
+
+
                 </td>
                 <td class="company-column">
                     {{-- <h3>Company Details</h3> --}}
@@ -223,7 +245,7 @@
         <!-- Footer -->
         <div class="footer">
             <p>Thank you for your business!</p>
-            <p>If you have any questions, please contact us at support@example.com</p>
+            <p>If you have any questions, please contact us at marketing@zsi.ai</p>
         </div>
     </div>
 
