@@ -78,6 +78,10 @@ class UserPurchasedHistoryController extends Controller
         // Hide unnecessary fields from the package
         $userPackage->package->makeHidden(['discounts', 'discounted_price']);
 
+        $userPackage['pdf'] = url("package/invoice/$id");
+
+
+
         // Return the result as a JSON response
         return response()->json($userPackage);
     }

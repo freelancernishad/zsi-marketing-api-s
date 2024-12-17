@@ -128,6 +128,7 @@ class UserPackageController extends Controller
 
          // Retrieve the UserPackage with related data
          $userPackage = UserPackage::with([
+            'user',
              'package:id,name,price,features',     // Load the package relationship with specific fields
              'addons' => function ($query) {  // Limit the fields loaded for the addons
                  $query->select('id', 'user_id', 'package_id', 'addon_id', 'purchase_id');
@@ -146,6 +147,7 @@ class UserPackageController extends Controller
          $userPackage->package->makeHidden(['discounts', 'discounted_price']);
 
          $data = $userPackage;
+        //  return response()->json($data);
 
 
 

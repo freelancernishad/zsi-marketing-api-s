@@ -3,234 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice</title>
+    <title>Invoice #{{ $data->id }}</title>
     <style>
-        /* General Reset */
-        * {
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', Arial, sans-serif;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            border: 1px solid #ddd;
         }
 
-        body {
-            background: #f4f7fc;
-            padding: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        /* Header */
+        .header {
+            text-align: center;
+            /* background-color: #0073e6; Company blue color */
+            padding: 20px;
+            border-radius: 10px;
+            color: #000000;
         }
+        .header img {
 
-        /* Invoice Container */
-        .invoice-container {
-            background: #fff;
-            width: 900px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
         }
-
-        /* Header Section */
-        .invoice-header {
-            background: #4a90e2;
-            color: #fff;
-            padding: 15px 30px;
+        .header h1 {
+            font-size: 26px;
+            margin: 0;
         }
-
-        .header-table {
-            width: 100%;
-        }
-
-        .header-table td {
-            vertical-align: middle;
-        }
-
-        .header-table .company-info {
-            text-align: left;
-            padding-right: 20px;
-        }
-
-        .header-table .company-info h1 {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .header-table .company-info p {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-
-        .header-table .invoice-logo {
-            text-align: right;
-        }
-
-        .header-table .invoice-logo h2 {
+        .header p {
             font-size: 18px;
-            text-transform: uppercase;
-            font-weight: bold;
+            margin: 0;
         }
 
-        .header-table .invoice-logo p {
-            font-size: 12px;
-        }
-
-        /* Invoice Details Section */
-        .invoice-details {
-            padding: 20px 30px;
-            border-bottom: 1px solid #e6ebf1;
-        }
-
+        /* Customer and Company Details Table */
         .details-table {
             width: 100%;
-            border-spacing: 0 10px;
+            border-collapse: collapse;
+            margin: 20px 0;
         }
-
+        .details-table th,
         .details-table td {
+            padding: 10px;
             font-size: 14px;
-            color: #555;
-            padding: 8px;
-            vertical-align: top;
-        }
-
-        .details-table td h3 {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #4a90e2;
-            display: inline-block;
-        }
-
-        .details-table td:first-child {
-            padding-right: 20px;
+            border: 1px solid #ddd;
             text-align: left;
         }
-
-        .details-table td:last-child {
-            text-align: right;
+        .details-table th {
+            background-color: #f0f4f8;
+        }
+        .customer-column, .company-column {
+            width: 50%;
+            padding: 10px;
         }
 
-        /* Features Section */
-        .features {
-            padding: 20px 30px;
+        /* Table Info */
+        .table-info {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .table-info th, .table-info td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .table-info th {
+            background-color: #f0f4f8;
+        }
+        .table-info td {
             font-size: 14px;
         }
 
-        .features h3 {
-            font-size: 16px;
+        /* Addon Section */
+        .addon-section {
+            margin: 20px 0;
+        }
+
+        /* Price Details */
+        .total-row td {
             font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #4a90e2;
-            display: inline-block;
-        }
-
-        .features ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .features ul li {
-            color: #555;
-            padding: 8px 0;
-            border-bottom: 1px solid #e6ebf1;
-            display: flex;
-            align-items: center;
-        }
-
-        .features ul li:last-child {
-            border-bottom: none;
-        }
-
-        .features ul li::before {
-            content: '✔';
-            color: #4a90e2;
             font-size: 16px;
-            font-weight: bold;
-            margin-right: 8px;
+        }
+        .total-price {
+            text-align: right;
+            font-size: 16px;
+            padding-right: 15px;
         }
 
-        /* Footer Section */
-        .invoice-footer {
-            background: #f8f9fa;
-            padding: 15px 30px;
+        /* Footer */
+        .footer {
             text-align: center;
+            padding: 10px;
+            background-color: #f0f4f8;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .footer p {
             font-size: 12px;
-            border-top: 1px solid #e6ebf1;
+            margin: 5px 0;
         }
 
-        .invoice-footer p {
-            color: #777;
+        /* Start and End Dates Styling */
+        .package-dates {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
         }
-
-        .invoice-footer p:first-child {
+        .package-dates div {
+            width: 48%;
+        }
+        .package-dates span {
             font-weight: bold;
-            color: #333;
+        }
+        .package-dates p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <div class="invoice-container">
-        <header class="invoice-header">
-            <table class="header-table">
-                <tr>
-                    <td class="company-info">
-                        <h1>Zsi.ai</h1>
-                        <p>Professional Business Solutions</p>
-                    </td>
-                    <td class="invoice-logo">
-                        <h2>Invoice</h2>
-                        <p>#23</p>
-                    </td>
-                </tr>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <img src="https://marketing.zsi.ai/_next/image?url=%2FLogo.png&w=256&q=75" width="140px" alt="Company Logo">
+            <h1>Invoice</h1>
+            <p>Invoice #{{ $data->id }}</p>
+        </div>
+
+        <!-- Customer and Company Details Table -->
+        <table class="details-table">
+            <tr>
+                <td class="customer-column">
+                    <h3>Customer Details</h3>
+                    <span>{{ $data->user->name }}</span><br>
+                    <span>{{ $data->user->email }}</span><br>
+                    <span>{{ $data->user->phone }}</span><br>
+                    <span>{{ $data->user->city }}, {{ $data->user->state }}, {{ $data->user->country }}</span><br>
+                    <span>{{ $data->business_name }}</span>
+                </td>
+                <td class="company-column">
+                    {{-- <h3>Company Details</h3> --}}
+                    <h3></h3>
+                    <span>Zsi Marketing</span><br>
+                    <span>marketing@zsi.ai</span><br>
+                    <span>74-09 37th Avenue</span><br>
+                    <span>Suite 2038, Jackson Heights</span><br>
+                    <span>NY 11372</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Package Details -->
+        <div class="addon-section">
+            <h3>Package Details</h3>
+            <table class="table-info">
+                <thead>
+                    <tr>
+                        <th>Package Name</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ $data->package->name }}</td>
+                        <td>${{ $data->package->price }}</td>
+                    </tr>
+                </tbody>
             </table>
-        </header>
 
-        <section class="invoice-details">
-            <table class="details-table">
+            <!-- Start Date and End Date -->
+            <div class="package-dates">
+                <div>
+                    <p><span>Start Date:</span> {{ \Carbon\Carbon::parse($data->started_at)->format('M d, Y') }}</p>
+                </div>
+                <div>
+                    <p><span>Expired Date:</span> {{ \Carbon\Carbon::parse($data->ends_at)->format('M d, Y') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Addons Table -->
+        <h3>Addons</h3>
+        <table class="table-info">
+            <thead>
                 <tr>
-                    <td>
-                        <h3>Business Details</h3>
-                        <p><strong>Business Name:</strong> Zsi.ai</p>
-                        <p><strong>Date:</strong> 2024-12-16</p>
-                        <p><strong>Start Date:</strong> 2024-12-16</p>
-                        <p><strong>End Date:</strong> 2025-03-26</p>
-                    </td>
-                    <td>
-                        <h3>Package Details</h3>
-                        <p><strong>Package:</strong> Social Media Standard Package</p>
-                        <p><strong>Price:</strong> $500.00</p>
-                        <p><strong>Discount:</strong> 0%</p>
-                    </td>
+                    <th>Addon Name</th>
+                    <th>Price</th>
                 </tr>
-            </table>
-        </section>
+            </thead>
+            <tbody>
+                @foreach ($data->addons as $addon)
+                    <tr>
+                        <td>{{ $addon->addon->addon_name }}</td>
+                        <td>${{ $addon->addon->price }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-        <section class="features">
-            <h3>Included Features</h3>
-            <ul>
-                <li>Comprehensive SEO audit</li>
-                <li>Keyword research and optimization</li>
-                <li>On-page and off-page SEO</li>
-                <li>Monthly blog post (10 articles)</li>
-                <li>Dedicated SEO Expert</li>
-                <li>Social media setup (Facebook, LinkedIn, Instagram, Twitter)</li>
-                <li>25 posts per month (across platforms)</li>
-                <li>Engagement (responding to comments/messages)</li>
-                <li>Social media ads setup and monitoring</li>
-                <li>Dedicated social media manager</li>
-                <li>Monthly performance report</li>
-                <li>Backlinks report</li>
-                <li>Ads campaign report and new plan</li>
-            </ul>
-        </section>
+        <!-- Total Price -->
+        <table class="table-info">
+            <tr class="total-row">
+                <td class="total-price">Total Price:</td>
+                <td>${{ $data->package->price + $data->addons->sum(function($addon) { return $addon->addon->price; }) }}</td>
+            </tr>
+        </table>
 
-        <footer class="invoice-footer">
-            <p>Generated on: 2024-12-16 07:20:19</p>
-            <p>&copy; 2024 Zsi.ai. All rights reserved.</p>
-        </footer>
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>If you have any questions, please contact us at support@example.com</p>
+        </div>
     </div>
+
 </body>
 </html>
