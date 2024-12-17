@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.2",
         "aws/aws-sdk-php": "^3.327",
+        "carlos-meneses/laravel-mpdf": "^2.1",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "^3.29",
@@ -34,6 +35,7 @@
             "app/Helpers/Gateways/Stripe.php",
             "app/Helpers/FileSystem/FileHelper.php",
             "app/Helpers/Package/PackageHelpers.php",
+            "app/Helpers/Mpdf/MpdfHelpers.php",
             "app/Helpers/GoogleAuth/GoogleHelpers.php",
             "app/Helpers/DashboardMetrics/DashboardMetricsHelpers.php"
         ]

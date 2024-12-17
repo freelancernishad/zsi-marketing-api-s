@@ -1,14 +1,15 @@
 <?php
 
 
+use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use App\Models\User;
 use Illuminate\Support\Facades\Http;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 function handleGoogleAuth(Request $request)
@@ -28,6 +29,7 @@ function handleGoogleAuth(Request $request)
             'access_token' => $request->access_token,
         ]);
 
+
         if ($response->failed() || !isset($response['email'])) {
             return response()->json([
                 'success' => false,
@@ -36,6 +38,9 @@ function handleGoogleAuth(Request $request)
         }
 
         $userData = $response->json();
+
+        Log::info($userData);
+
         $user = User::where('email', $userData['email'])->first();
 
         if (!$user) {

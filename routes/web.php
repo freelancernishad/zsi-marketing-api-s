@@ -4,6 +4,7 @@ use App\Mail\TestMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 
 Route::get('/', function () {
@@ -24,6 +25,10 @@ Route::get('send-test-email', function () {
         return response()->json('Error: ' . $e->getMessage());
     }
 });
+
+
+
+Route::get('package/invoice/{id}',[UserPackageController::class , 'packageInvoice']);
 
 // Route to serve files from the 'protected' disk
 Route::get('/files/{path}', function ($path) {
