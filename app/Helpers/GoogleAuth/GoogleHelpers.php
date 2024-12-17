@@ -24,10 +24,13 @@ function handleGoogleAuth(Request $request)
     }
 
     try {
-        // Fetch user data from Google API
-        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+        $response = Http::get('https://www.googleapis.com/oauth2/v3/userinfo', [
             'access_token' => $request->access_token,
         ]);
+        // Fetch user data from Google API
+        // $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+        //     'access_token' => $request->access_token,
+        // ]);
 
 
         if ($response->failed() || !isset($response['email'])) {
