@@ -240,11 +240,11 @@
         </div>
 
         <!-- Addons Table -->
-        <h3>Addons</h3>
+        <h3>Add-on</h3>
         <table class="table-info">
             <thead>
                 <tr>
-                    <th>Addon Name</th>
+                    <th>Add-on Name</th>
                     <th>Price</th>
                 </tr>
             </thead>
