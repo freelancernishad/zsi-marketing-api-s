@@ -26,13 +26,12 @@
         /* Header */
         .header {
             text-align: center;
-            /* background-color: #0073e6; Company blue color */
             padding: 20px;
             border-radius: 10px;
             color: #000000;
+            position: relative; /* Make header container relative */
         }
         .header img {
-
             margin-bottom: 15px;
         }
         .header h1 {
@@ -42,6 +41,15 @@
         .header p {
             font-size: 18px;
             margin: 0;
+        }
+
+        /* Position QR Code */
+        .qr-code {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
         }
 
         /* Customer and Company Details Table */
@@ -136,53 +144,69 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <img src="https://marketing.zsi.ai/_next/image?url=%2FLogo.png&w=256&q=75" width="140px" alt="Company Logo">
-            <h1>Invoice</h1>
-            <p>Invoice #{{ $data->id }}</p>
+
+            <table width="100%">
+
+                <tr>
+                    <td  style="text-align: left">
+                        <img src="https://marketing.zsi.ai/_next/image?url=%2FLogo.png&w=256&q=75" width="140px" alt="Company Logo">
+                        <h1>Invoice</h1>
+                        <p>Invoice #{{ $data->id }}</p>
+
+                    </td>
+                    <td style="text-align: right">
+
+                        @php
+                            $qrurl = url("package/invoice/$data->id");
+                        @endphp
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ $qrurl }}&size=80x80" class="qr-code" alt="QR Code">
+
+                    </td>
+                </tr>
+
+            </table>
+
+
+
+
+
+
         </div>
 
         <!-- Customer and Company Details Table -->
         <table class="details-table">
             <tr>
-                <td class="customer-column">
-                    <h3>Customer Details</h3>
 
-
-                    @if($data->user->name)
-                        <span>{{ $data->user->name }}</span><br>
-                    @endif
-
-                    @if($data->user->email)
-                    <span>{{ $data->user->email }}</span><br>
-                    @endif
-
-                    @if($data->user->phone)
-                        <span>{{ $data->user->phone }}</span><br>
-                    @endif
-
-                    @if($data->user->city || $data->user->state || $data->user->country)
-                        <span>{{ $data->user->city }}, {{ $data->user->state }}, {{ $data->user->country }}</span><br>
-                    @endif
-
-
-                    @if($data->business_name)
-                        <span>{{ $data->business_name }}</span>
-                    @endif
-
-                    
-
-
-
-                </td>
                 <td class="company-column">
-                    {{-- <h3>Company Details</h3> --}}
                     <h3></h3>
                     <span>Zsi Marketing</span><br>
                     <span>marketing@zsi.ai</span><br>
                     <span>74-09 37th Avenue</span><br>
                     <span>Suite 2038, Jackson Heights</span><br>
-                    <span>NY 11372</span>
+                    <span>NY 11372</span>
                 </td>
+
+                <td class="customer-column">
+                    <h3>Customer Details</h3>
+                    @if($data->user->name)
+                        <span>{{ $data->user->name }}</span><br>
+                    @endif
+                    @if($data->user->email)
+                        <span>{{ $data->user->email }}</span><br>
+                    @endif
+                    @if($data->user->phone)
+                        <span>{{ $data->user->phone }}</span><br>
+                    @endif
+                    @if($data->user->city || $data->user->state || $data->user->country)
+                        <span>{{ $data->user->city }}, {{ $data->user->state }}, {{ $data->user->country }}</span><br>
+                    @endif
+                    @if($data->business_name)
+                        <span>{{ $data->business_name }}</span>
+                    @endif
+                </td>
+
+
+
             </tr>
         </table>
 
