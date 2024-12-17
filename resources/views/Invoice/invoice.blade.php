@@ -18,7 +18,7 @@
             margin: 30px auto;
             padding: 20px;
             background-color: #fff;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            /* box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); */
             border-radius: 10px;
             border: 1px solid #ddd;
         }
