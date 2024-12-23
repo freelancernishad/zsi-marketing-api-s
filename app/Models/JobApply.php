@@ -46,7 +46,9 @@ class JobApply extends Model
         parent::boot();
 
         static::creating(function ($jobApply) {
-            $jobApply->requested_origin = Request::ip();
+            // $jobApply->requested_origin = Request::ip();
+            $jobApply->requested_origin = Request::header('Origin');
+
             $jobApply->application_id = 'ZSI-' . strtoupper(Str::random(8));
         });
     }
