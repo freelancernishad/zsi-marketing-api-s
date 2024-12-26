@@ -71,6 +71,15 @@ class BookingController extends Controller
             }
         }
 
+
+        // Map trip_type to its corresponding value
+        $tripTypeMap = [
+            1 => 'One-way',
+            2 => 'Round-trip',
+            3 => 'Multi-destination',
+        ];
+        $tripType = $tripTypeMap[$data['trip_type']] ?? 'Unknown';
+
         // Prepare data for the email
         $emailData = [
             'first_name' => $data['first_name'],
@@ -79,7 +88,7 @@ class BookingController extends Controller
             'from_email' => 'rahmaniatravel@zsi.ai',
             'from_name' => 'Rahmania Travel',
             'airline' => $data['airline'],
-            'trip_type' => $data['trip_type'],
+            'trip_type' => $tripType, 
             'flight_class' => $data['flight_class'],
             'adults' => $data['adults'],
             'children' => $data['children'],
