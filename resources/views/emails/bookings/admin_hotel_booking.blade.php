@@ -30,6 +30,8 @@
             margin-top: 20px;
             font-size: 0.9em;
             color: #777;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
         }
     </style>
 </head>
@@ -66,8 +68,13 @@
 
         <p>Please review the booking details and take necessary actions.</p>
         <p>Thank you!</p>
+
         <div class="footer">
-            <p>This is an automated notification. Please do not reply to this email.</p>
+            <p>Best regards,</p>
+            <p><strong>Rahmania Travels</strong></p>
+            <p>Contact Us:</p>
+            <p>Email: <a href="mailto:rahmaniatravel@yahoo.com">rahmaniatravel@yahoo.com</a></p>
+            <p>Phone: <a href="tel:718-205-3270">718-205-3270</a></p>
         </div>
     </div>
 </body>
