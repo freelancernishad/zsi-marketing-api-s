@@ -15,12 +15,31 @@ Route::get('/', function () {
 Route::get('/clear-cache', [SystemSettingController::class, 'clearCache']);
 
 // Route to send a test email
+// Route::get('send-test-email', function () {
+//     $email = 'freelancernishad123@gmail.com'; // Enter your test email here
+
+//     try {
+//         Mail::to($email)->send(new TestMail());
+//         return response()->json('Test email sent!');
+//     } catch (\Exception $e) {
+//         return response()->json('Error: ' . $e->getMessage());
+//     }
+// });
+
 Route::get('send-test-email', function () {
     $email = 'freelancernishad123@gmail.com'; // Enter your test email here
 
     try {
-        Mail::to($email)->send(new TestMail());
-        return response()->json('Test email sent!');
+        // Use smtp1 mailer
+        $mailer = app('mail.manager')->mailer('smtp1');
+
+        // Set the `from` dynamically
+        $mailer->to($email)->send((new TestMail())->from(
+            'rahmaniatravel@zsi.ai',
+            'Rahmania Travel'
+        ));
+
+        return response()->json('Test email sent using smtp1!');
     } catch (\Exception $e) {
         return response()->json('Error: ' . $e->getMessage());
     }
