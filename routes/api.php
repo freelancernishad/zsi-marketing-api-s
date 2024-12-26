@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Api\Global\JobApplyController;
 use App\Http\Controllers\Api\Server\ServerStatusController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
@@ -43,3 +44,8 @@ Route::get('/global/careers/jobs', [CareersJobController::class, 'index']);
 Route::get('/global/careers/jobs/{id}', [CareersJobController::class, 'show']);
 Route::post('/global/job-apply', [JobApplyController::class, 'store']);
 Route::get('/global/job-apply/{application_id}', [JobApplyController::class, 'searchByApplicationId']);
+
+
+
+Route::post('/book-hotel', [BookingController::class, 'bookHotel']);
+Route::post('/book-flight', [BookingController::class, 'bookFlight']);
