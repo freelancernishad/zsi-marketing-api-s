@@ -61,16 +61,15 @@ class BookingController extends Controller
 
         // Prepare multiDestinations data
         $multiDestinations = [];
-        foreach ($data as $key => $value) {
-            if (strpos($key, 'multiDestinations') !== false) {
-                $parts = explode('.', $key);
-                $index = str_replace('multiDestinations[', '', $parts[0]);
-                $index = str_replace(']', '', $index);
-                $field = $parts[1];
-                $multiDestinations[$index][$field] = $value;
+        if (isset($data['multiDestinations']) && is_array($data['multiDestinations'])) {
+            foreach ($data['multiDestinations'] as $index => $destination) {
+                $multiDestinations[$index] = [
+                    'departure' => $destination['departure'],
+                    'destination' => $destination['destination'],
+                    'date' => $destination['date'],
+                ];
             }
         }
-
 
         // Map trip_type to its corresponding value
         $tripTypeMap = [
@@ -87,15 +86,20 @@ class BookingController extends Controller
             'email' => $data['email'],
             'from_email' => 'rahmaniatravel@zsi.ai',
             'from_name' => 'Rahmania Travel',
-            'airline' => $data['airline'],
-            'trip_type' => $tripType, 
+            'airline' => $data['airline'] ?? 'Not specified', // Handle if airline is not provided
+            'trip_type' => $tripType,
             'flight_class' => $data['flight_class'],
             'adults' => $data['adults'],
             'children' => $data['children'],
-            'multiDestinations' => array_values($multiDestinations),
+            'phone' => $data['phone'] ?? 'Not provided', // Handle if phone is not provided
+            'address' => $data['address'] ?? 'Not provided', // Handle if address is not provided
+            'city' => $data['city'] ?? 'Not provided', // Handle if city is not provided
+            'zip' => $data['zip'] ?? 'Not provided', // Handle if zip is not provided
+            'country' => $data['country'] ?? 'Not provided', // Handle if country is not provided
+            'multiDestinations' => array_values($multiDestinations), // Ensure multiDestinations is an array
         ];
 
-        // Send email
+        // Send email to the customer
         MailService::sendMail(
             $data['email'],
             'Flight Booking Confirmation',
@@ -105,7 +109,7 @@ class BookingController extends Controller
             $emailData['from_name'],
         );
 
-        // Send email
+        // Send email to the admin
         MailService::sendMail(
             'freelancernishad123@gmail.com',
             'New Flight Booking Notification',
