@@ -44,13 +44,14 @@ class BookingController extends Controller
 
         // Send email
         MailService::sendMail(
-            'freelancernishad123@gmail.com',
+            'rahmaniatravelservicesny@gmail.com',
             'New Hotel Booking Notification',
             'emails.bookings.admin_hotel_booking',
             $emailData,
             $emailData['from_email'],
             $emailData['from_name'],
         );
+
 
         return response()->json(['message' => 'Hotel booking email sent successfully!']);
     }
@@ -111,7 +112,7 @@ class BookingController extends Controller
 
         // Send email to the admin
         MailService::sendMail(
-            'freelancernishad123@gmail.com',
+            'rahmaniatravelservicesny@gmail.com',
             'New Flight Booking Notification',
             'emails.bookings.admin_flight_booking',
             $emailData,
