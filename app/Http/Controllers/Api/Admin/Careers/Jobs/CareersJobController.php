@@ -16,7 +16,8 @@ class CareersJobController extends Controller
 public function index(Request $request)
 {
     // Check if 'per_page' parameter exists in the request
-    $perPage = $request->get('per_page', 10); // Default to 10 if not provided
+    // $perPage = $request->get('per_page', 10);
+    $perPage = 30;
 
     $jobs = CareersJob::paginate($perPage);
 
