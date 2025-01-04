@@ -55,7 +55,7 @@ class SupportTicketApiController extends Controller
             return response()->json(['message' => 'Unauthorized access.'], 403);
         }
 
-        return response()->json($ticket, 200);
+        return response()->json($ticket->toArray(), 200);
     }
 
     // Update a support ticket (if needed)
