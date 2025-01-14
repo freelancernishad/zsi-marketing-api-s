@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Global\JobApplyController;
 use App\Http\Controllers\Api\Server\ServerStatusController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\Admin\Careers\Jobs\CareersJobController;
+use App\Http\Controllers\Api\Admin\Package\CustomPackageRequestController;
 use App\Http\Controllers\Api\User\PackageAddon\UserPackageAddonController;
 
 // Load additional route files
@@ -47,5 +48,18 @@ Route::get('/global/job-apply/{application_id}', [JobApplyController::class, 'se
 
 
 
+
+
+
+
+
+
+
+
+
 Route::post('/book-hotel', [BookingController::class, 'bookHotel']);
 Route::post('/book-flight', [BookingController::class, 'bookFlight']);
+
+
+
+

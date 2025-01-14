@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
 use App\Http\Controllers\Api\User\Schedules\UserSchedulesController;
 use App\Http\Controllers\Api\User\UserManagement\UserProfileController;
 use App\Http\Controllers\Api\User\Package\UserPurchasedHistoryController;
+use App\Http\Controllers\Api\Admin\Package\CustomPackageRequestController;
 use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
 use App\Http\Controllers\Api\User\SocialMedia\UserSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
@@ -35,6 +36,10 @@ Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
 
     // Package routes
     Route::post('package/subscribe', [UserPackageController::class, 'packagePurchase']);
+
+    Route::post('/custom/package/request', [CustomPackageRequestController::class, 'store']);
+
+
     Route::get('/packages/history', [UserPurchasedHistoryController::class, 'getPurchasedHistory']);
     Route::get('/packages/history/{id}', [UserPurchasedHistoryController::class, 'getSinglePurchasedHistory']);
 
