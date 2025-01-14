@@ -19,7 +19,8 @@ class JobApplyController extends Controller
     public function index(Request $request)
     {
         // Default per_page value
-        $perPage = $request->input('per_page', 10);
+        // $perPage = $request->input('per_page', 10);
+        $perPage = 30;
 
         // Start query
         $query = JobApply::query();

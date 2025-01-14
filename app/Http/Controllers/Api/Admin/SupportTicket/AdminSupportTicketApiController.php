@@ -21,7 +21,7 @@ class AdminSupportTicketApiController extends Controller
     public function show($id)
     {
         $ticket = SupportTicket::with(['user', 'replies'])->findOrFail($id);
-        return response()->json($ticket);
+        return response()->json($ticket->toArray());
     }
 
     // Reply to a support ticket
