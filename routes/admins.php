@@ -68,11 +68,18 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::delete('/{id}', [CouponController::class, 'destroy']);
     });
 
-    // Transitions
+
+
     Route::prefix('transitions')->group(function () {
+
         Route::get('/transaction-history', [AdminPaymentController::class, 'getAllTransactionHistory'])
             ->name('admin.transitions.transaction-history');
+
+        Route::get('/transaction-single/{id}', [AdminPaymentController::class, 'getTransactionById']);
+
     });
+
+
 
     // Social Media Links
     Route::prefix('social-media/links')->group(function () {

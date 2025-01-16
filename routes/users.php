@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Auth\User\VerificationController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
 use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
 use App\Http\Controllers\Api\User\Schedules\UserSchedulesController;
+use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
 use App\Http\Controllers\Api\User\UserManagement\UserProfileController;
 use App\Http\Controllers\Api\User\Package\UserPurchasedHistoryController;
 use App\Http\Controllers\Api\Admin\Package\CustomPackageRequestController;
@@ -53,6 +54,21 @@ Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
     Route::post('/schedule', [UserSchedulesController::class, 'create']);
     Route::get('/schedules', [UserSchedulesController::class, 'index']);
     Route::get('/schedule/{id}', [UserSchedulesController::class, 'show']);
+
+
+    Route::prefix('billings')->group(function () {
+        Route::get('/billing-history', [AdminPaymentController::class, 'getAllTransactionHistory'])
+            ->name('user.transitions.transaction-history');
+
+        Route::get('/billing-single/{id}', [AdminPaymentController::class, 'getTransactionById']);
+    });
+
+
+
+
+
+
+
 });
 
 // Social media routes
