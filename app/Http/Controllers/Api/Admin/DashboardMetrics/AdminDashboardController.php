@@ -68,7 +68,7 @@ class AdminDashboardController extends Controller
          if ($fromDate) {
              $revenueByDate = Package::all()->map(function ($package) use ($fromDate, $toDate) {
                  // Query to get total revenue for the package within the specified date range or day
-                 $totalAmountQuery = Payment::where('payable_type', 'Package')
+                 $totalAmountQuery = Payment::where('payable_type', 'App\\Models\\Package')
                      ->where('payable_id', $package->id)
                      ->completed(); // Use the 'completed' scope to filter by completed payments
 
@@ -92,7 +92,7 @@ class AdminDashboardController extends Controller
 
 
         // Calculate total revenue across all packages
-        $totalRevenue = Payment::where('payable_type', 'Package')
+        $totalRevenue = Payment::where('payable_type', 'App\\Models\\Package')
             ->completed()  // Use the 'completed' scope for completed payments
             ->sum('amount');
 

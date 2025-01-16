@@ -77,6 +77,11 @@ class UserPackageController extends Controller
         $currency = $request->currency ?? 'USD'; // Default currency to USD
         $business_name = $request->business_name ?? ''; // Default currency to USD
         $payableType = $request->payable_type;
+        if ($payableType === 'Package') {
+            $payableType = 'App\\Models\\Package';
+        }
+
+
         $payableId = $request->payable_id;
         $addonIds = $request->addon_ids ?? []; // Default to empty array if no addon IDs are provided
         $couponId = $request->coupon_id ?? null;

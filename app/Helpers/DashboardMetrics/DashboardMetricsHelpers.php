@@ -33,7 +33,7 @@ function getPackageRevenueData($year = null, $week = 'current')
                 DB::raw('MONTH(paid_at) as month'),
                 DB::raw('SUM(amount) as total_amount')
             )
-            ->where('payable_type', 'Package')
+            ->where('payable_type', 'App\\Models\\Package')
             ->where('payable_id', $package->id)
             ->completed()
             ->whereYear('paid_at', $year)
@@ -57,7 +57,7 @@ function getPackageRevenueData($year = null, $week = 'current')
         ];
 
         // Yearly Payments
-        $yearlyRevenue = Payment::where('payable_type', 'Package')
+        $yearlyRevenue = Payment::where('payable_type', 'App\\Models\\Package')
             ->where('payable_id', $package->id)
             ->completed()
             ->whereYear('paid_at', $year)
@@ -74,7 +74,7 @@ function getPackageRevenueData($year = null, $week = 'current')
                 DB::raw('DAYOFWEEK(paid_at) as day'),
                 DB::raw('SUM(amount) as total_amount')
             )
-            ->where('payable_type', 'Package')
+            ->where('payable_type', 'App\\Models\\Package')
             ->where('payable_id', $package->id)
             ->completed()
             ->whereBetween('paid_at', [$weekStart, $weekEnd])

@@ -67,7 +67,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
         $lineItems = [];
 
         // If payable_type is a package, adjust product name
-        if ($payableType === 'Package' && $payableId) {
+        if ($payableType === 'App\\Models\\Package' && $payableId) {
             $payable = Package::find($payableId);
             if ($payable) {
                 $productName = $payable->name;
