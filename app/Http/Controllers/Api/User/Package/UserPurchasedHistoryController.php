@@ -10,6 +10,40 @@ use Illuminate\Support\Facades\Auth;
 class UserPurchasedHistoryController extends Controller
 {
     /**
+     * Get the authenticated user's active packages.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function activePackages()
+    {
+        // Retrieve the authenticated user
+        $user = Auth::user();
+
+        // Use the model function to get active packages
+        $activePackages = UserPackage::getActivePackages($user->id);
+
+        // Return the result as a JSON response
+        return response()->json($activePackages);
+    }
+
+    /**
+     * Get the authenticated user's package history.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function packageHistory()
+    {
+        // Retrieve the authenticated user
+        $user = Auth::user();
+
+        // Use the model function to get package history
+        $packageHistory = UserPackage::getPackageHistory($user->id);
+
+        // Return the result as a JSON response
+        return response()->json($packageHistory);
+    }
+
+    /**
      * Get the authenticated user's purchased package history with related data.
      *
      * @return \Illuminate\Http\JsonResponse
@@ -79,8 +113,6 @@ class UserPurchasedHistoryController extends Controller
         $userPackage->package->makeHidden(['discounts', 'discounted_price']);
 
         $userPackage['pdf'] = url("package/invoice/$id");
-
-
 
         // Return the result as a JSON response
         return response()->json($userPackage);

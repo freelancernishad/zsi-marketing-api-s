@@ -41,6 +41,13 @@ Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
     Route::post('/custom/package/request', [CustomPackageRequestController::class, 'store']);
 
 
+    // Get active packages
+    Route::get('/active/Service', [UserPurchasedHistoryController::class, 'activePackages']);
+    // Get package history
+    Route::get('/service/history', [UserPurchasedHistoryController::class, 'packageHistory']);
+
+
+
     Route::get('/packages/history', [UserPurchasedHistoryController::class, 'getPurchasedHistory']);
     Route::get('/packages/history/{id}', [UserPurchasedHistoryController::class, 'getSinglePurchasedHistory']);
 
