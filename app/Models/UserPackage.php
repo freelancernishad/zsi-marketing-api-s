@@ -42,6 +42,15 @@ class UserPackage extends Model
         return $this->belongsTo(Package::class);
     }
 
+
+
+    public function documents()
+    {
+        return $this->hasMany(UserPackageDocument::class, 'userpackage_id');
+    }
+
+
+
     /**
      * Relationship: A UserPackage has many UserPackageAddons.
      *

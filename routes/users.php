@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Admin\Package\CustomPackageRequestController;
 use App\Http\Controllers\Api\User\SupportTicket\SupportTicketApiController;
 use App\Http\Controllers\Api\User\SocialMedia\UserSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
+use App\Http\Controllers\Api\User\DocumentsReports\UserPackageDocumentController;
 
 // Authentication routes for users
 Route::prefix('auth/user')->group(function () {
@@ -69,6 +70,25 @@ Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
 
         Route::get('/billing-single/{id}', [AdminPaymentController::class, 'getTransactionById']);
     });
+
+
+
+
+      // Get list of documents/reports by type
+      Route::get('/user-packages/{userPackageId}/documents-reports/{type}', [UserPackageDocumentController::class, 'index']);
+
+      // Upload a document/report
+      Route::post('/user-packages/{userPackageId}/documents-reports/{type}', [UserPackageDocumentController::class, 'store']);
+
+      // Update a document/report
+      Route::put('/documents-reports/{id}', [UserPackageDocumentController::class, 'update']);
+
+      // Delete a document/report
+      Route::delete('/documents-reports/{id}', [UserPackageDocumentController::class, 'destroy']);
+
+
+
+
 
 
 
