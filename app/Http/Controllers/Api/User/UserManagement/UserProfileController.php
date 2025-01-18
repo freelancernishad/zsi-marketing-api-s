@@ -23,7 +23,7 @@ class UserProfileController extends Controller
         $user->load([
             'userPackagePackagesHistory.addons.addon:id,addon_name,price', // Load addon details only
             'userPackagePackagesHistory.package:id,name,price,features', // Load package details
-            'userPackagePackagesHistory.payments',
+            'userPackagePackagesHistory.payment',
         ]);
         // Return the response in the expected format
         return response()->json($user->toArray());
