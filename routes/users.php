@@ -77,6 +77,10 @@ Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
       // Get list of documents/reports by type
       Route::get('/user-packages/{userPackageId}/documents-reports/{type}', [UserPackageDocumentController::class, 'index']);
 
+
+      Route::get('/documents-reports/all/{type}', [UserPackageDocumentController::class, 'getAllDocuments']);
+
+
       // Upload a document/report
       Route::post('/user-packages/{userPackageId}/documents-reports/{type}', [UserPackageDocumentController::class, 'store']);
 

@@ -43,6 +43,34 @@ class UserPackageDocumentController extends Controller
         return response()->json($formattedDocuments);
     }
 
+
+
+    public function getAllDocuments(Request $request, $type)
+    {
+        // Validate the type
+        if (!in_array($type, ['document', 'report'])) {
+            return response()->json(['message' => 'Invalid type specified'], 400);
+        }
+
+        // Get the list of documents/reports with the package relationship
+        $documents = UserPackageDocument::with('userPackage.package') // Eager load the package relationship
+            ->where('type', $type)
+            ->get();
+
+        // Format the response
+        $formattedDocuments = $documents->map(function ($document) {
+            return [
+                'id' => $document->id, // Package name
+                'package_name' => $document->userPackage->package->name ?? 'N/A', // Package name
+                'uploaded_date' => $document->uploaded_date, // Uploaded date
+                'file_name' => basename($document->file), // Extract file name from the file path
+                'file' => $document->file, // Full file path or URL
+            ];
+        });
+
+        return response()->json($formattedDocuments);
+    }
+
     /**
      * Upload a document or report for a specific UserPackage.
      *
