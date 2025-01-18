@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\Users\UserController;
 use App\Http\Controllers\Api\Auth\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\Careers\JobApplyController;
 use App\Http\Controllers\Api\Admin\Package\AdminPackageController;
+use App\Http\Controllers\Api\Notifications\NotificationController;
 use App\Http\Controllers\Api\SystemSettings\SystemSettingController;
 use App\Http\Controllers\Api\Admin\Blogs\Articles\ArticlesController;
 use App\Http\Controllers\Api\Admin\Blogs\Category\CategoryController;
@@ -183,6 +184,17 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::delete('/{id}', [CustomPackageRequestController::class, 'destroy']); // Delete a request
     });
 
+
+
+
+        // Get notifications for the authenticated user or admin
+        Route::get('/notifications', [NotificationController::class, 'index']);
+
+        // Mark a notification as read
+        Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+
+        // Create a notification for a user (admin only)
+        Route::post('/notifications/create-for-user', [NotificationController::class, 'createForUser']);
 
 
 

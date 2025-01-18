@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Coupon\CouponController;
 use App\Http\Controllers\Api\Auth\User\AuthUserController;
 use App\Http\Controllers\Api\Auth\User\VerificationController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
+use App\Http\Controllers\Api\Notifications\NotificationController;
 use App\Http\Controllers\Api\Auth\User\UserPasswordResetController;
 use App\Http\Controllers\Api\User\Schedules\UserSchedulesController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
@@ -90,7 +91,11 @@ Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
       // Delete a document/report
       Route::delete('/documents-reports/{id}', [UserPackageDocumentController::class, 'destroy']);
 
+        // Get notifications for the authenticated user or admin
+        Route::get('/notifications', [NotificationController::class, 'index']);
 
+        // Mark a notification as read
+        Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
 
 
 
