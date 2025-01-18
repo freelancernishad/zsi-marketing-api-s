@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin\Transitions;
 
 use App\Models\Payment;
+use App\Models\UserPackage;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
