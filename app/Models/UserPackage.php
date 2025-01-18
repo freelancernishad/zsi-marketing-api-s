@@ -96,6 +96,7 @@ class UserPackage extends Model
     public function getFormattedDetails(): array
     {
         return [
+            'id' => $this->id, // Package name
             'package_name' => $this->package->name ?? 'N/A', // Package name
             'plan' => $this->getPlanType(), // Monthly or Yearly
             'active_date' => $this->started_at->toDateString(), // Active date
