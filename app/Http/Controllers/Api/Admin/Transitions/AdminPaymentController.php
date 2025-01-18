@@ -68,13 +68,11 @@ class AdminPaymentController extends Controller
             ]);
         }
 
-
         // Search by transaction_id if provided
         if ($request->has('search')) {
             $searchTerm = $request->input('search');
             $query->where('transaction_id', 'like', '%' . $searchTerm . '%');
         }
-
 
         // Select specific fields and include user data
         $query->with(['user' => function ($query) {
@@ -96,36 +94,47 @@ class AdminPaymentController extends Controller
         $transactions->getCollection()->transform(function ($payment) {
             $servicePurchased = $payment->payable;
 
-        // Initialize service_details and package_name
-        $serviceDetails =  null;
-        $packageName = null;
+            // Initialize service_details and package_name
+            $serviceDetails = null;
+            $packageName = null;
 
-        // Check if payable is a package and include package name in service_details
-        if ($payment->payable_type === 'App\\Models\\Package') {
-            $packageName = $servicePurchased->name ?? " "; // Get the package name
+            // Check if payable is a package and include package name in service_details
+            if ($payment->payable_type === 'App\\Models\\Package') {
+                $packageName = $servicePurchased->name ?? " "; // Get the package name
 
-            // If service_details is not already an array, initialize it
-            if (!is_array($serviceDetails)) {
-                $serviceDetails = [
-                    'selected_services' => []
-                ];
+                // If service_details is not already an array, initialize it
+                if (!is_array($serviceDetails)) {
+                    $serviceDetails = [
+                        'selected_services' => []
+                    ];
+                }
+                // Add the package name to the selected_services array
+                $serviceDetails['selected_services'][] = $packageName;
             }
-            // Add the package name to the selected_services array
-            $serviceDetails['selected_services'][] = $packageName;
-        }
 
-        return [
-            'id' => $payment->id,
-            'transaction_id' => $payment->transaction_id,
-            'name' => $payment->user->name,
-            'email' => $payment->user->email,
-            'profile_picture' => $payment->user->profile_picture,
-            'amount' => $payment->amount,
-            'paid_at' => $payment->paid_at,
-            'status' => $payment->status,
-            'service_details' => $serviceDetails, // Updated service_details with package name
+            // Get the next payment date
+            $nextPaymentDate = null;
+            if ($payment->user_package_id) {
+                $userPackage = UserPackage::find($payment->user_package_id);
+                if ($userPackage && $userPackage->ends_at) {
+                    $nextPaymentDate = $userPackage->ends_at->addDay()->toDateString(); // Next payment is the day after the package ends
+                }
+            }
 
-        ];
+            return [
+                'id' => $payment->id,
+                'packageName' => $packageName,
+                'transaction_id' => $payment->transaction_id,
+                'name' => $payment->user->name,
+                'email' => $payment->user->email,
+                'profile_picture' => $payment->user->profile_picture,
+                'amount' => $payment->amount,
+                'paid_at' => $payment->paid_at,
+                'status' => $payment->status,
+                'pdf' => url("package/invoice/$payment->user_package_id"),
+                'service_details' => $serviceDetails, // Updated service_details with package name
+                'next_payment_date' => $nextPaymentDate, // Add next payment date
+            ];
         });
 
         return response()->json($transactions);
