@@ -91,6 +91,9 @@ Route::prefix('user')->middleware(AuthenticateUser::class)->group(function () {
       // Delete a document/report
       Route::delete('/documents-reports/{id}', [UserPackageDocumentController::class, 'destroy']);
 
+
+
+
         // Get notifications for the authenticated user or admin
         Route::get('/notifications', [NotificationController::class, 'index']);
 

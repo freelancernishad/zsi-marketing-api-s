@@ -17,6 +17,7 @@ class UserPackageDocument extends Model
      */
     protected $fillable = [
         'userpackage_id',
+        'user_id', // Add user_id to the fillable array
         'uploaded_date',
         'file',
         'type',
@@ -30,6 +31,23 @@ class UserPackageDocument extends Model
     protected $casts = [
         'uploaded_date' => 'date',
     ];
+
+    /**
+     * Boot the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Automatically set the user_id based on the related UserPackage
+        static::creating(function ($model) {
+            if ($model->userPackage) {
+                $model->user_id = $model->userPackage->user_id;
+            }
+        });
+    }
 
     /**
      * Relationship: A UserPackageDocument belongs to a UserPackage.

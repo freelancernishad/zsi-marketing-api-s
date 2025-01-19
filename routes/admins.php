@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
 use App\Http\Controllers\Api\Admin\DashboardMetrics\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\SocialMedia\AdminSocialMediaLinkController;
 use App\Http\Controllers\Api\Admin\SupportTicket\AdminSupportTicketApiController;
+use App\Http\Controllers\Api\User\DocumentsReports\UserPackageDocumentController;
 
 // Admin Authentication Routes
 Route::prefix('auth/admin')->group(function () {
@@ -183,6 +184,25 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::put('/{id}', [CustomPackageRequestController::class, 'update']); // Update a request
         Route::delete('/{id}', [CustomPackageRequestController::class, 'destroy']); // Delete a request
     });
+
+
+
+
+      // Get list of documents/reports by type
+      Route::get('/user-packages/{userPackageId}/documents-reports/{type}', [UserPackageDocumentController::class, 'index']);
+
+
+      Route::get('/documents-reports/all/{type}', [UserPackageDocumentController::class, 'getAllDocuments']);
+
+
+      // Upload a document/report
+      Route::post('/user-packages/{userPackageId}/documents-reports/{type}', [UserPackageDocumentController::class, 'store']);
+
+      // Update a document/report
+      Route::put('/documents-reports/{id}', [UserPackageDocumentController::class, 'update']);
+
+      // Delete a document/report
+      Route::delete('/documents-reports/{id}', [UserPackageDocumentController::class, 'destroy']);
 
 
 

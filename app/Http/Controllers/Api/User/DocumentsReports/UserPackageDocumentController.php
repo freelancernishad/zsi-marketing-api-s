@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Api\User\DocumentsReports;
 
-use App\Http\Controllers\Controller;
-use App\Models\UserPackageDocument;
 use Illuminate\Http\Request;
+use App\Models\UserPackageDocument;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class UserPackageDocumentController extends Controller
@@ -52,19 +53,31 @@ class UserPackageDocumentController extends Controller
             return response()->json(['message' => 'Invalid type specified'], 400);
         }
 
-        // Get the list of documents/reports with the package relationship
-        $documents = UserPackageDocument::with('userPackage.package') // Eager load the package relationship
-            ->where('type', $type)
-            ->get();
+        // Get the authenticated user
+        $user = Auth::guard('user')->user();
+
+        // Check if the authenticated user is a regular user (not admin)
+        if ($user) {
+            // For regular users, only fetch documents belonging to their user_id
+            $documents = UserPackageDocument::with('userPackage.package')
+                ->where('type', $type)
+                ->where('user_id', $user->id) // Filter by the authenticated user's ID
+                ->get();
+        } else {
+            // For admins, fetch all documents
+            $documents = UserPackageDocument::with('userPackage.package')
+                ->where('type', $type)
+                ->get();
+        }
 
         // Format the response
         $formattedDocuments = $documents->map(function ($document) {
             return [
-                'id' => $document->id, // Package name
-                'package_name' => $document->userPackage->package->name ?? 'N/A', // Package name
-                'uploaded_date' => $document->uploaded_date, // Uploaded date
-                'file_name' => basename($document->file), // Extract file name from the file path
-                'file' => $document->file, // Full file path or URL
+                'id' => $document->id,
+                'package_name' => $document->userPackage->package->name ?? 'N/A',
+                'uploaded_date' => $document->uploaded_date,
+                'file_name' => basename($document->file),
+                'file' => $document->file,
             ];
         });
 
