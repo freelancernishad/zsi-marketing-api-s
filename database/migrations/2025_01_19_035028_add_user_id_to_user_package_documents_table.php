@@ -14,8 +14,8 @@ class AddUserIdToUserPackageDocumentsTable extends Migration
     public function up()
     {
         Schema::table('user_package_documents', function (Blueprint $table) {
-            // Add the user_id column as a foreign key
-            $table->unsignedBigInteger('user_id')->after('userpackage_id');
+            // Add the user_id column as a nullable foreign key
+            $table->unsignedBigInteger('user_id')->after('userpackage_id')->nullable();
 
             // Add foreign key constraint
             $table->foreign('user_id')
