@@ -31,13 +31,24 @@ class UserPurchasedHistoryController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function packageHistory()
+    public function packageHistory(Request $request)
     {
-        // Retrieve the authenticated user
-        $user = Auth::user();
+        // Check if the authenticated user is an admin
+        if (Auth::guard('admin')->check()) {
+            // For admins, get the user_id from the request parameters
+            $userId = $request->input('user_id');
+
+            // Validate that user_id is provided
+            if (!$userId) {
+                return response()->json(['message' => 'User ID is required for admin access'], 400);
+            }
+        } else {
+            // For regular users, get the authenticated user's ID
+            $userId = Auth::id();
+        }
 
         // Use the model function to get package history
-        $packageHistory = UserPackage::getPackageHistory($user->id);
+        $packageHistory = UserPackage::getPackageHistory($userId);
 
         // Return the result as a JSON response
         return response()->json($packageHistory);

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Admin\Careers\Jobs\CareersJobController;
 use App\Http\Controllers\Api\Auth\Admin\AdminResetPasswordController;
 use App\Http\Controllers\Api\Admin\Schedules\AdminSchedulesController;
 use App\Http\Controllers\Api\Admin\Transitions\AdminPaymentController;
+use App\Http\Controllers\Api\User\Package\UserPurchasedHistoryController;
 use App\Http\Controllers\Api\Admin\Package\CustomPackageRequestController;
 use App\Http\Controllers\Api\Admin\Package\AdminPurchasedHistoryController;
 use App\Http\Controllers\Api\Admin\PackageAddon\AdminPackageAddonController;
@@ -186,7 +187,7 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
     });
 
 
-
+    Route::get('/service/history', [UserPurchasedHistoryController::class, 'packageHistory']);
 
       // Get list of documents/reports by type
       Route::get('/user-packages/{userPackageId}/documents-reports/{type}', [UserPackageDocumentController::class, 'index']);
