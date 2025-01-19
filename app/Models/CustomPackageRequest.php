@@ -16,6 +16,7 @@ class CustomPackageRequest extends Model
         'service_description',
         'status',
         'admin_notes',
+        'package_id',
     ];
 
     // Default status for new requests
@@ -42,5 +43,15 @@ class CustomPackageRequest extends Model
             self::STATUS_COMPLETED => 'Completed',
             self::STATUS_REJECTED => 'Rejected',
         ];
+    }
+
+        /**
+     * Relationship to the Package model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function package()
+    {
+        return $this->belongsTo(Package::class, 'package_id');
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Package extends Model
 {
-    protected $fillable = ['name', 'description', 'price', 'duration_days', 'features', 'index_no'];
+    protected $fillable = ['name', 'description', 'price', 'duration_days', 'features', 'index_no', 'type'];
 
     // Accessor to get features as an array
     public function getFeaturesAttribute($value)
@@ -19,7 +19,6 @@ class Package extends Model
     {
         $this->attributes['features'] = json_encode($value);
     }
-
 
     /**
      * Relationship to the PackageDiscount model.
@@ -51,7 +50,6 @@ class Package extends Model
     // Add these properties to the append array
     protected $appends = ['discount_rate', 'discounted_price'];
 
-
     // Accessor to get the discount rate dynamically
     public function getDiscountRateAttribute()
     {
@@ -70,6 +68,37 @@ class Package extends Model
         return $discountData['discounted_price']; // Return the calculated discounted price
     }
 
+    // Accessor to check if the package is public
+    public function getIsPublicAttribute()
+    {
+        return $this->type === 'public';
+    }
 
+    // Accessor to check if the package is private
+    public function getIsPrivateAttribute()
+    {
+        return $this->type === 'private';
+    }
 
+    /**
+     * Query scope to filter public packages.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePublic($query)
+    {
+        return $query->where('type', 'public');
+    }
+
+    /**
+     * Query scope to filter private packages.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePrivate($query)
+    {
+        return $query->where('type', 'private');
+    }
 }

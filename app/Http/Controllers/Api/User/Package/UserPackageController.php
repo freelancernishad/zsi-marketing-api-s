@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\UserPackageAddon;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use App\Models\CustomPackageRequest;
 use Illuminate\Support\Facades\Validator;
 
 class UserPackageController extends Controller
@@ -22,7 +23,7 @@ class UserPackageController extends Controller
     public function index(Request $request)
     {
         // Get the list of all packages with features, discount rate, and discounted price
-        $packages = Package::orderBy('index_no','asc')->get()->makeHidden(['discounts']);
+        $packages = Package::public()->orderBy('index_no','asc')->get()->makeHidden(['discounts']);
 
         // Return the list of packages with calculated discount details
         return response()->json($packages);
@@ -37,13 +38,33 @@ class UserPackageController extends Controller
     public function show($id)
     {
         // Find the package by ID
-        $package = Package::find($id)->makeHidden(['discounts']);
+        $package = Package::find($id);
 
         if (!$package) {
             return response()->json(['message' => 'Package not found'], 404);
         }
 
-        // Return the package details with calculated discount rate and discounted price
+        // Check if the package is private
+        if ($package->type === 'private') {
+            // Ensure the user is authenticated
+            if (!auth()->check()) {
+                return response()->json(['message' => 'Unauthorized. Please log in to access this package.'], 401);
+            }
+
+            // Check if the package is assigned to the authenticated user via CustomPackageRequest
+            $isAssigned = CustomPackageRequest::where('package_id', $package->id)
+                ->where('user_id', auth()->id())
+                ->exists();
+
+            if (!$isAssigned) {
+                return response()->json(['message' => 'You do not have permission to access this package.'], 403);
+            }
+        }
+
+        // Hide discounts if not needed
+        $package->makeHidden(['discounts']);
+
+        // Return the package details
         return response()->json($package);
     }
 
@@ -75,12 +96,11 @@ class UserPackageController extends Controller
         // Extract validated data
         $userId = auth()->id(); // Use authenticated user's ID
         $currency = $request->currency ?? 'USD'; // Default currency to USD
-        $business_name = $request->business_name ?? ''; // Default currency to USD
+        $business_name = $request->business_name ?? ''; // Default business name to empty string
         $payableType = $request->payable_type;
         if ($payableType === 'Package') {
             $payableType = 'App\\Models\\Package';
         }
-
 
         $payableId = $request->payable_id;
         $addonIds = $request->addon_ids ?? []; // Default to empty array if no addon IDs are provided
@@ -93,6 +113,18 @@ class UserPackageController extends Controller
         $package = Package::find($payableId);
         if (!$package) {
             return response()->json(['error' => 'Package not found'], 404);
+        }
+
+        // Check if the package is private
+        if ($package->type === 'private') {
+            // Ensure the package is assigned to the authenticated user via CustomPackageRequest
+            $isAssigned = CustomPackageRequest::where('package_id', $package->id)
+                ->where('user_id', $userId)
+                ->exists();
+
+            if (!$isAssigned) {
+                return response()->json(['error' => 'You do not have permission to purchase this package.'], 403);
+            }
         }
 
         // Get the discounted price based on the provided duration (discount_months)
@@ -122,7 +154,7 @@ class UserPackageController extends Controller
             return $paymentResult;
 
         } catch (\Exception $e) {
-            return ['error' => 'Payment processing error: ' . $e->getMessage()];
+            return response()->json(['error' => 'Payment processing error: ' . $e->getMessage()], 500);
         }
     }
 

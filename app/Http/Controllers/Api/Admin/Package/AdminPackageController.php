@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api\Admin\Package;
 
 use App\Models\Package;
+use Illuminate\Http\Request;
 use App\Models\PackageDiscount;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\CustomPackageRequest;
 
 class AdminPackageController extends Controller
 {
@@ -17,7 +18,7 @@ class AdminPackageController extends Controller
     public function index()
     {
         // Fetch all packages with their discounts
-        $packages = Package::with('discounts')->get();
+        $packages = Package::public()->with('discounts')->get();
 
         return response()->json($packages);
     }
@@ -45,38 +46,60 @@ class AdminPackageController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        $rules =  [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'duration_days' => 'nullable|integer|min:1',
-            'features' => 'required|array',
-            'discounts' => 'nullable|array',
-            'discounts.*.duration_months' => 'required_with:discounts|integer|min:1',
-            'discounts.*.discount_rate' => 'required_with:discounts|numeric|min:0|max:100',
-        ];
+/**
+ * Create a new package with discounts.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @return \Illuminate\Http\Response
+ */
+public function store(Request $request)
+{
+    $rules =  [
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        'duration_days' => 'nullable|integer|min:1',
+        'features' => 'required|array',
+        'discounts' => 'nullable|array',
+        'discounts.*.duration_months' => 'required_with:discounts|integer|min:1',
+        'discounts.*.discount_rate' => 'required_with:discounts|numeric|min:0|max:100',
+        'custom_package_id' => 'nullable|integer|exists:custom_package_requests,id', // Ensure custom_package_id exists
+    ];
 
-        $validationResponse = validateRequest($request->all(), $rules);
-        if ($validationResponse) {
-            return $validationResponse; // Return if validation fails
-        }
-
-        // Create the package
-        $data = $request->only(['name', 'description', 'price', 'duration_days', 'features']);
-        $data['duration_days'] = 0;
-        $package = Package::create($data);
-
-        // Handle discounts
-        if ($request->has('discounts')) {
-            foreach ($request->discounts as $discount) {
-                $package->discounts()->create($discount);
-            }
-        }
-
-        return response()->json($package->load('discounts'), 201);
+    $validationResponse = validateRequest($request->all(), $rules);
+    if ($validationResponse) {
+        return $validationResponse; // Return if validation fails
     }
+
+    // Create the package
+    $data = $request->only(['name', 'description', 'price', 'duration_days', 'features', 'custom_package_id']);
+    $data['duration_days'] = 0;
+
+    // Set package type based on custom_package_id
+    $data['type'] = $request->has('custom_package_id') && $request->custom_package_id ? 'private' : 'public';
+
+    $package = Package::create($data);
+
+    // Handle discounts
+    if ($request->has('discounts')) {
+        foreach ($request->discounts as $discount) {
+            $package->discounts()->create($discount);
+        }
+    }
+
+    // Update CustomPackageRequest if custom_package_id is provided
+    if ($request->has('custom_package_id') && $request->custom_package_id) {
+        $customRequest = CustomPackageRequest::find($request->custom_package_id);
+        if ($customRequest) {
+            $customRequest->update([
+                'package_id' => $package->id,
+                'status' => CustomPackageRequest::STATUS_COMPLETED,
+            ]);
+        }
+    }
+
+    return response()->json($package->load('discounts'), 201);
+}
 
     /**
      * Update an existing package and its discounts.
