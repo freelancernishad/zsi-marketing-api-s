@@ -115,10 +115,11 @@ class StripeController extends Controller
                     case 'invoice.payment_succeeded':
                         // Handle successful subscription payment
                         $invoice = $event->data->object;
+                        Log::info($invoice);
 
                         // Find the UserPackage by Stripe subscription ID
                         $userPackage = UserPackage::where('stripe_subscription_id', $invoice->subscription)->first();
-
+                        Log::info($userPackage);
                         // If UserPackage does not exist, create it
                         if (!$userPackage) {
                             // Retrieve the Stripe subscription to get details
