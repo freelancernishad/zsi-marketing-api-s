@@ -104,7 +104,7 @@ class UserPackageController extends Controller
         $discountMonths = $request->discount_months ?? 0;
         $successUrl = $request->success_url ?? 'http://localhost:8000/stripe/payment/success';
         $cancelUrl = $request->cancel_url ?? 'http://localhost:8000/stripe/payment/cancel';
-        $isRecurring = $request->is_recurring ?? false; // Check if recurring payment is requested
+        $isRecurring = $request->is_recurring ?? true; // Check if recurring payment is requested
 
         // Retrieve package and ensure it's valid
         $package = Package::find($payableId);
