@@ -62,14 +62,38 @@ function createStripeCheckoutSession(array $data): JsonResponse
 
         // Create or retrieve Stripe Customer
         $user = User::find($userId);
+
+
+
         if (!$user->stripe_customer_id) {
+            // If no Stripe customer ID exists, create a new customer
             $customer = \Stripe\Customer::create([
                 'email' => $user->email,
                 'name' => $user->name,
             ]);
             $user->stripe_customer_id = $customer->id;
             $user->save();
+        } else {
+            // Check if the existing Stripe customer ID is valid
+            try {
+                \Stripe\Customer::retrieve($user->stripe_customer_id);
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                // If the customer ID is invalid, remove it and create a new customer
+                if ($e->getHttpStatus() === 404) { // 404 means "Not Found"
+                    $customer = \Stripe\Customer::create([
+                        'email' => $user->email,
+                        'name' => $user->name,
+                    ]);
+                    $user->stripe_customer_id = $customer->id;
+                    $user->save();
+                } else {
+                    // Re-throw the exception if it's not a "Not Found" error
+                    throw $e;
+                }
+            }
         }
+
+
 
         // Success and Cancel URLs
         $successUrl = "{$baseSuccessUrl}?payment_id={$payment->id}&session_id={CHECKOUT_SESSION_ID}";
