@@ -9,7 +9,7 @@ use App\Models\PackageAddon;
 use Stripe\Checkout\Session;
 use App\Models\UserPackageAddon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
+use Stripe\TestHelpers\TestClock;
 
 function createStripeCheckoutSession(array $data): JsonResponse
 {
@@ -133,7 +133,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
         }
 
         // Step 1: Create a test clock (only in test mode)
-        $testClock = \Stripe\TestHelpers\TestClock::create([
+        $testClock = TestClock::create([
             'frozen_time' => time() + 300, // Freeze time 5 minutes from now
         ]);
 
@@ -159,7 +159,6 @@ function createStripeCheckoutSession(array $data): JsonResponse
                 'package_id' => $payableId, // Include package ID in metadata
                 'business_name' => $business_name, // Include business name in metadata
             ],
-            'test_clock' => $testClock->id, // Attach the test clock
         ];
 
         // Create the subscription
