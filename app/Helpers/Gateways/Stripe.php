@@ -1,5 +1,6 @@
 <?php
 use Stripe\Stripe;
+use App\Models\User;
 use App\Models\Coupon;
 use App\Models\Package;
 use App\Models\Payment;
