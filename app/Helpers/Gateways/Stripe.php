@@ -148,6 +148,9 @@ function createStripeCheckoutSession(array $data): JsonResponse
             'line_items' => $lineItems,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
+            'metadata' => [
+                'package_id' => $payableId, // Add package_id to metadata
+            ],
         ]);
     
         // Create a payment record only for one-time payments
