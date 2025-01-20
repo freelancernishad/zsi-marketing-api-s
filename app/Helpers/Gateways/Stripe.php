@@ -90,15 +90,19 @@ function createStripeCheckoutSession(array $data): JsonResponse
         if ($payableType === 'App\\Models\\Package' && $payableId) {
             $payable = Package::find($payableId);
             if ($payable) {
-                $lineItems[] = [
-                    'price_data' => [
-                        'currency' => $currency,
-                        'product' => [
-                            'name' => $payable->name, // Correct PHP associative array syntax
-                        ],
-                        'unit_amount' => $finalAmount * 100, // Amount in cents
-                        'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                // Create a Price object for the package
+                $price = \Stripe\Price::create([
+                    'currency' => $currency,
+                    'product_data' => [
+                        'name' => $payable->name,
                     ],
+                    'unit_amount' => $finalAmount * 100, // Amount in cents
+                    'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                ]);
+    
+                // Add the Price ID to the line items
+                $lineItems[] = [
+                    'price' => $price->id, // Use the Price ID
                     'quantity' => 1,
                 ];
             }
@@ -110,15 +114,19 @@ function createStripeCheckoutSession(array $data): JsonResponse
             foreach ($addonIds as $addonId) {
                 $addon = PackageAddon::find($addonId);
                 if ($addon) {
-                    $lineItems[] = [
-                        'price_data' => [
-                            'currency' => $currency,
-                            'product' => [
-                                'name' => $addon->addon_name, // Correct PHP associative array syntax
-                            ],
-                            'unit_amount' => $addon->price * 100, // Addon price in cents
-                            'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                    // Create a Price object for the addon
+                    $price = \Stripe\Price::create([
+                        'currency' => $currency,
+                        'product_data' => [
+                            'name' => $addon->addon_name,
                         ],
+                        'unit_amount' => $addon->price * 100, // Addon price in cents
+                        'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                    ]);
+    
+                    // Add the Price ID to the line items
+                    $lineItems[] = [
+                        'price' => $price->id, // Use the Price ID
                         'quantity' => 1,
                     ];
                     $addonTotal += $addon->price;
@@ -142,16 +150,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
             'customer' => $user->stripe_customer_id,
             'items' => [
                 [
-                    'price_data' => [
-                        'currency' => $currency,
-                        'product' => [
-                            'name' => $payable->name, // Correct PHP associative array syntax
-                        ],
-                        'unit_amount' => $finalAmount * 100, // Amount in cents
-                        'recurring' => [
-                            'interval' => 'day', // Set interval to daily
-                        ],
-                    ],
+                    'price' => $price->id, // Use the Price ID
                     'quantity' => 1,
                 ],
             ],
@@ -176,7 +175,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
             'customer' => $user->stripe_customer_id,
             'line_items' => [
                 [
-                    'price' => $subscription->items->data[0]->price->id, // Use the price ID from the subscription
+                    'price' => $price->id, // Use the Price ID
                     'quantity' => 1,
                 ],
             ],
