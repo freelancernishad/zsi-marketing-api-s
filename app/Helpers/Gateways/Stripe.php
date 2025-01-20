@@ -145,7 +145,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                     'price_data' => [
                         'currency' => $currency,
                         'product' => [
-                            'name' => $payable->name, // Use 'product' instead of 'product_data'
+                            'name' => "$payable->name", // Use 'product' instead of 'product_data'
                         ],
                         'unit_amount' => $finalAmount * 100, // Amount in cents
                         'recurring' => [
