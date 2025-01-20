@@ -1,4 +1,5 @@
 <?php
+
 use Stripe\Stripe;
 use App\Models\User;
 use App\Models\Coupon;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 
 function createStripeCheckoutSession(array $data): JsonResponse
 {
+    // Default values for optional parameters
     $amount = $data['amount'] ?? 100;
     $currency = $data['currency'] ?? 'USD';
     $userId = $data['user_id'] ?? null;
@@ -24,6 +26,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
     $baseSuccessUrl = $data['success_url'] ?? 'http://localhost:8000/stripe/payment/success';
     $baseCancelUrl = $data['cancel_url'] ?? 'http://localhost:8000/stripe/payment/cancel';
 
+    // Initialize discount and final amount
     $discount = 0;
     $finalAmount = $amount;
 
@@ -38,18 +41,18 @@ function createStripeCheckoutSession(array $data): JsonResponse
         }
     }
 
+    // Ensure the final amount is greater than zero
     if ($finalAmount <= 0) {
         return response()->json(['error' => 'Payment amount must be greater than zero'], 400);
     }
 
     try {
+        // Set Stripe API key
         Stripe::setApiKey(config('STRIPE_SECRET'));
 
-        // Create or retrieve Stripe Customer
+        // Retrieve or create Stripe Customer
         $user = User::find($userId);
-
         if (!$user->stripe_customer_id) {
-            // If no Stripe customer ID exists, create a new customer
             $customer = \Stripe\Customer::create([
                 'email' => $user->email,
                 'name' => $user->name,
@@ -57,11 +60,11 @@ function createStripeCheckoutSession(array $data): JsonResponse
             $user->stripe_customer_id = $customer->id;
             $user->save();
         } else {
-            // Check if the existing Stripe customer ID is valid
             try {
+                // Verify if the existing Stripe customer ID is valid
                 \Stripe\Customer::retrieve($user->stripe_customer_id);
             } catch (\Stripe\Exception\InvalidRequestException $e) {
-                // If the customer ID is invalid, remove it and create a new customer
+                // If the customer ID is invalid, create a new customer
                 if ($e->getHttpStatus() === 404) { // 404 means "Not Found"
                     $customer = \Stripe\Customer::create([
                         'email' => $user->email,
@@ -76,11 +79,11 @@ function createStripeCheckoutSession(array $data): JsonResponse
             }
         }
 
-        // Success and Cancel URLs
+        // Prepare success and cancel URLs
         $successUrl = "{$baseSuccessUrl}?session_id={CHECKOUT_SESSION_ID}";
         $cancelUrl = "{$baseCancelUrl}?session_id={CHECKOUT_SESSION_ID}";
 
-        // Prepare line items
+        // Prepare line items for the Checkout Session
         $lineItems = [];
 
         // Add base package price to line items
@@ -129,7 +132,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
             createUserPackageAddons($userId, $payableId, $addonIds, null); // Pass null for purchase_id (will be updated later)
         }
 
-        // Step 1: Create a test clock
+        // Step 1: Create a test clock (only in test mode)
         $testClock = \Stripe\TestHelpers\TestClock::create([
             'frozen_time' => time() + 300, // Freeze time 5 minutes from now
         ]);
@@ -209,13 +212,13 @@ function createStripeCheckoutSession(array $data): JsonResponse
             ]);
         }
 
+        // Return the Checkout Session URL
         return response()->json(['session_url' => $session->url]);
     } catch (\Exception $e) {
+        // Handle any exceptions
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
-
-
 
 /**
  * Create user_package_addons for a user based on selected addons.
@@ -223,7 +226,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
  * @param int $userId
  * @param int $packageId
  * @param array $addonIds
- * @param int $purchaseId
+ * @param int|null $purchaseId
  * @return void
  */
 function createUserPackageAddons(int $userId, int $packageId, array $addonIds, $purchaseId): void
