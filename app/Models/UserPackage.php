@@ -10,7 +10,18 @@ use Carbon\Carbon;
 
 class UserPackage extends Model
 {
-    protected $fillable = ['user_id', 'package_id', 'started_at', 'ends_at', 'business_name'];
+    protected $fillable = [
+        'user_id',
+        'package_id',
+        'started_at',
+        'ends_at',
+        'business_name',
+        'stripe_subscription_id', // Add Stripe subscription ID
+        'stripe_customer_id', // Add Stripe customer ID
+        'status', // Add subscription status (active, canceled, expired)
+        'canceled_at', // Add canceled_at timestamp
+        'next_billing_at', // Add next billing date
+    ];
 
     /**
      * The attributes that should be cast to native types.
@@ -20,6 +31,8 @@ class UserPackage extends Model
     protected $casts = [
         'started_at' => 'datetime',
         'ends_at' => 'datetime',
+        'canceled_at' => 'datetime',
+        'next_billing_at' => 'datetime',
     ];
 
     /**
@@ -42,14 +55,15 @@ class UserPackage extends Model
         return $this->belongsTo(Package::class);
     }
 
-
-
-    public function documents()
+    /**
+     * Relationship: A UserPackage has many UserPackageDocuments.
+     *
+     * @return HasMany
+     */
+    public function documents(): HasMany
     {
         return $this->hasMany(UserPackageDocument::class, 'userpackage_id');
     }
-
-
 
     /**
      * Relationship: A UserPackage has many UserPackageAddons.
@@ -96,12 +110,13 @@ class UserPackage extends Model
     public function getFormattedDetails(): array
     {
         return [
-            'id' => $this->id, // Package name
-            'package_name' => $this->package->name ?? 'N/A', // Package name
+            'id' => $this->id,
+            'package_name' => $this->package->name ?? 'N/A',
             'plan' => $this->getPlanType(), // Monthly or Yearly
-            'active_date' => $this->started_at->toDateString(), // Active date
-            'end_date' => $this->ends_at->toDateString(), // End date
-            'status' => $this->getStatus(), // Active or Expired
+            'active_date' => $this->started_at->toDateString(),
+            'end_date' => $this->ends_at->toDateString(),
+            'status' => $this->getStatus(), // Active, Expired, or Canceled
+            'next_billing_date' => $this->next_billing_at?->toDateString() ?? 'N/A', // Next billing date
         ];
     }
 
@@ -118,13 +133,17 @@ class UserPackage extends Model
     }
 
     /**
-     * Determine the status of the package (active/expired).
+     * Determine the status of the package (active/expired/canceled).
      *
      * @return string
      */
     protected function getStatus(): string
     {
         $now = now();
+
+        if ($this->status === 'canceled') {
+            return 'canceled';
+        }
 
         if ($this->started_at <= $now && $this->ends_at >= $now) {
             return 'active';
@@ -144,6 +163,7 @@ class UserPackage extends Model
         return self::where('user_id', $userId)
             ->where('started_at', '<=', now())
             ->where('ends_at', '>=', now())
+            ->where('status', 'active') // Only active subscriptions
             ->with('package') // Eager load package details
             ->get()
             ->map(function ($userPackage) {
@@ -166,5 +186,44 @@ class UserPackage extends Model
             ->map(function ($userPackage) {
                 return $userPackage->getFormattedDetails();
             });
+    }
+
+    /**
+     * Cancel the subscription.
+     *
+     * @return void
+     */
+    public function cancel(): void
+    {
+        $this->update([
+            'status' => 'canceled',
+            'canceled_at' => now(),
+        ]);
+    }
+
+    /**
+     * Reactivate the subscription.
+     *
+     * @return void
+     */
+    public function reactivate(): void
+    {
+        $this->update([
+            'status' => 'active',
+            'canceled_at' => null,
+        ]);
+    }
+
+    /**
+     * Update the next billing date.
+     *
+     * @param Carbon $nextBillingAt
+     * @return void
+     */
+    public function updateNextBillingDate(Carbon $nextBillingAt): void
+    {
+        $this->update([
+            'next_billing_at' => $nextBillingAt,
+        ]);
     }
 }

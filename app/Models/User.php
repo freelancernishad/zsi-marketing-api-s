@@ -36,6 +36,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'city',
         'region',
         'zip_code',
+        'stripe_customer_id'
 
 
     ];

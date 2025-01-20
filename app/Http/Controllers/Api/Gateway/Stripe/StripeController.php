@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api\Gateway\Stripe;
 
+use Carbon\Carbon;
 use Stripe\Stripe;
-use Stripe\Checkout\Session;
-use Stripe\PaymentIntent;
-use App\Models\Payment;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Stripe\Webhook;
+use App\Models\Payment;
+use Stripe\PaymentIntent;
+use App\Models\UserPackage;
+use Illuminate\Http\Request;
+use Stripe\Checkout\Session;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
 class StripeController extends Controller
@@ -53,86 +56,144 @@ class StripeController extends Controller
     }
 
 
-    // Handle Stripe Webhook
     public function handleWebhook(Request $request)
     {
-        // Secret key for Stripe Webhook signature verification
-        $endpoint_secret = config('STRIPE_WEBHOOK_SECRET');
+        // Set your Stripe webhook secret
+        $endpointSecret = config('STRIPE_WEBHOOK_SECRET');
 
-        // Get raw body and signature header
+        // Get the payload and signature header
         $payload = $request->getContent();
-        $sig_header = $request->header('Stripe-Signature');
+        $sigHeader = $request->header('Stripe-Signature');
 
         try {
-            // Verify webhook signature
-            $event = Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
+            // Verify the webhook signature
+            $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
 
-            // Handle different event types
+            // Handle the event
             switch ($event->type) {
                 case 'checkout.session.completed':
-                    $session = $event->data->object; // Contains \Stripe\Checkout\Session
+                    // Handle successful checkout session (one-time or subscription)
+                    $session = $event->data->object;
 
-                    // Find the payment record and update status
+                    // Find the payment record
                     $payment = Payment::where('session_id', $session->id)->first();
                     if ($payment) {
-                        $paymentIntentId = $session->payment_intent;
+                        // Update payment status
                         $payment->update([
-                            'transaction_id' => $paymentIntentId,
+                            'transaction_id' => $session->payment_intent,
                             'status' => 'completed',
                             'paid_at' => now(),
                             'response_data' => json_encode($event),
                         ]);
 
-                        // Check if payable type is "package" and call PackageSubscribe
+                        // If this is a package purchase, create or update the UserPackage
                         if ($payment->payable_type === 'App\\Models\\Package') {
-                           $userPackageId =  PackageSubscribe($payment->payable_id,$payment->user_id,$payment->business_name);
-                           $payment->update([
-                             'user_package_id' => $userPackageId,
-                            ]);
+                            $userPackage = UserPackage::updateOrCreate(
+                                ['id' => $payment->user_package_id], // Use the user_package_id if it exists
+                                [
+                                    'user_id' => $payment->user_id,
+                                    'package_id' => $payment->payable_id,
+                                    'business_name' => $payment->business_name,
+                                    'started_at' => now(),
+                                    'ends_at' => now()->addMonths($payment->discount_months ?? 1), // Default to 1 month
+                                    'stripe_subscription_id' => $session->subscription, // For recurring payments
+                                    'stripe_customer_id' => $session->customer, // For recurring payments
+                                    'status' => 'active',
+                                ]
+                            );
+
+                            // Update the payment with the UserPackage ID
+                            $payment->update(['user_package_id' => $userPackage->id]);
                         }
                     }
                     break;
 
-                case 'payment_intent.succeeded':
-                    // Handle successful payment
-                    $paymentIntent = $event->data->object; // Contains \Stripe\PaymentIntent
-                    $payment = Payment::where('session_id', $paymentIntent->id)->first();
-                    if ($payment) {
-                        $payment->update([
+                case 'invoice.payment_succeeded':
+                    // Handle successful subscription payment
+                    $invoice = $event->data->object;
+
+                    // Find the UserPackage by Stripe subscription ID
+                    $userPackage = UserPackage::where('stripe_subscription_id', $invoice->subscription)->first();
+                    if ($userPackage) {
+                        // Create a new payment record for the successful charge
+                        Payment::create([
+                            'user_id' => $userPackage->user_id,
+                            'gateway' => 'stripe',
+                            'amount' => $invoice->amount_paid / 100, // Convert from cents to dollars
+                            'currency' => $invoice->currency,
                             'status' => 'completed',
+                            'transaction_id' => $invoice->payment_intent,
                             'paid_at' => now(),
+                            'payable_type' => 'App\\Models\\Package',
+                            'payable_id' => $userPackage->package_id,
+                            'business_name' => $userPackage->business_name,
+                            'is_recurring' => true,
+                            'response_data' => json_encode($event),
                         ]);
 
-                        // Check if payable type is "package" and call PackageSubscribe
-                        if ($payment->payable_type === 'App\\Models\\Package') {
-                            PackageSubscribe($payment->payable_id,$payment->user_id,$payment->business_name);
-                        }
+                        // Update the next billing date
+                        $userPackage->update([
+                            'next_billing_at' => Carbon::createFromTimestamp($invoice->lines->data[0]->period->end),
+                        ]);
                     }
                     break;
 
-                case 'payment_intent.payment_failed':
-                    // Handle failed payment
-                    $paymentIntent = $event->data->object;
-                    $payment = Payment::where('transaction_id', $paymentIntent->id)->first();
-                    if ($payment) {
-                        $payment->update([
+                case 'invoice.payment_failed':
+                    // Handle failed subscription payment
+                    $invoice = $event->data->object;
+
+                    // Find the UserPackage by Stripe subscription ID
+                    $userPackage = UserPackage::where('stripe_subscription_id', $invoice->subscription)->first();
+                    if ($userPackage) {
+                        // Create a new payment record for the failed charge
+                        Payment::create([
+                            'user_id' => $userPackage->user_id,
+                            'gateway' => 'stripe',
+                            'amount' => $invoice->amount_due / 100, // Convert from cents to dollars
+                            'currency' => $invoice->currency,
                             'status' => 'failed',
+                            'transaction_id' => $invoice->payment_intent,
+                            'payable_type' => 'App\\Models\\Package',
+                            'payable_id' => $userPackage->package_id,
+                            'business_name' => $userPackage->business_name,
+                            'is_recurring' => true,
+                            'response_data' => json_encode($event),
                         ]);
+
+                        // Notify the user about the failed payment (you can add this logic)
+                        Log::warning("Payment failed for user {$userPackage->user_id} on subscription {$invoice->subscription}");
                     }
                     break;
 
-                // Handle other events as needed
+                case 'customer.subscription.deleted':
+                    // Handle subscription cancellation or expiration
+                    $subscription = $event->data->object;
+
+                    // Find the UserPackage by Stripe subscription ID
+                    $userPackage = UserPackage::where('stripe_subscription_id', $subscription->id)->first();
+                    if ($userPackage) {
+                        // Mark the subscription as canceled
+                        $userPackage->update([
+                            'status' => 'canceled',
+                            'canceled_at' => now(),
+                        ]);
+                    }
+                    break;
 
                 default:
-                    // Unexpected event type
-                    return response()->json(['message' => 'Event type not handled'], 400);
+                    // Log unhandled event types
+                    Log::info('Unhandled Stripe event type: ' . $event->type);
+                    break;
             }
 
-            // Respond to Stripe that the webhook was received successfully
+            // Return a 200 response to Stripe
             return response()->json(['message' => 'Webhook handled'], 200);
 
         } catch (\Exception $e) {
-            // If there is an error with the webhook or signature verification
+            // Log any errors
+            Log::error('Stripe webhook error: ' . $e->getMessage());
+
+            // Return a 400 response to Stripe
             return response()->json(['error' => 'Webhook Error: ' . $e->getMessage()], 400);
         }
     }

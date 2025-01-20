@@ -18,20 +18,20 @@ function createStripeCheckoutSession(array $data): JsonResponse
     $payableType = $data['payable_type'] ?? null;
     $payableId = $data['payable_id'] ?? null;
     $business_name = $data['business_name'] ?? null;
-    $addonIds = $data['addon_ids'] ?? []; // Addon IDs, if provided
-
+    $addonIds = $data['addon_ids'] ?? [];
+    $isRecurring = $data['is_recurring'] ?? false;
     $baseSuccessUrl = $data['success_url'] ?? 'http://localhost:8000/stripe/payment/success';
     $baseCancelUrl = $data['cancel_url'] ?? 'http://localhost:8000/stripe/payment/cancel';
 
     $discount = 0;
-    $finalAmount = $amount; // Start with the base amount
+    $finalAmount = $amount;
 
     // Handle coupon discount
     if ($couponId) {
         $coupon = Coupon::find($couponId);
         if ($coupon && $coupon->isValid()) {
             $discount = $coupon->getDiscountAmount($amount);
-            $finalAmount -= $discount; // Subtract discount from the final amount
+            $finalAmount -= $discount;
         } else {
             return response()->json(['error' => 'Invalid or expired coupon'], 400);
         }
@@ -41,11 +41,11 @@ function createStripeCheckoutSession(array $data): JsonResponse
         return response()->json(['error' => 'Payment amount must be greater than zero'], 400);
     }
 
-    // Create the payment record with the final amount (after discount)
+    // Create the payment record
     $payment = Payment::create([
         'user_id' => $userId,
         'gateway' => 'stripe',
-        'amount' => $finalAmount, // Store the final amount after discount
+        'amount' => $finalAmount,
         'currency' => $currency,
         'status' => 'pending',
         'transaction_id' => uniqid(),
@@ -53,85 +53,144 @@ function createStripeCheckoutSession(array $data): JsonResponse
         'payable_id' => $payableId,
         'business_name' => $business_name,
         'coupon_id' => $couponId,
+        'is_recurring' => $isRecurring,
     ]);
 
     try {
         Stripe::setApiKey(config('STRIPE_SECRET'));
 
-        // Success and Cancel URLs for Stripe Checkout session
+        // Create or retrieve Stripe Customer
+        $user = User::find($userId);
+        if (!$user->stripe_customer_id) {
+            $customer = \Stripe\Customer::create([
+                'email' => $user->email,
+                'name' => $user->name,
+            ]);
+            $user->stripe_customer_id = $customer->id;
+            $user->save();
+        }
+
+        // Success and Cancel URLs
         $successUrl = "{$baseSuccessUrl}?payment_id={$payment->id}&session_id={CHECKOUT_SESSION_ID}";
         $cancelUrl = "{$baseCancelUrl}?payment_id={$payment->id}&session_id={CHECKOUT_SESSION_ID}";
 
-        // Product details
-        $productName = 'Payment';
-        $lineItems = [];
+        // Create Stripe Subscription for recurring payments
+        if ($isRecurring) {
+            // Create Stripe Price for the base package
+            $stripePrice = \Stripe\Price::create([
+                'unit_amount' => $finalAmount * 100,
+                'currency' => $currency,
+                'recurring' => ['interval' => 'month'], // Adjust interval as needed
+                'product_data' => [
+                    'name' => 'Subscription for ' . $payableType,
+                ],
+            ]);
 
-        // If payable_type is a package, adjust product name
-        if ($payableType === 'App\\Models\\Package' && $payableId) {
-            $payable = Package::find($payableId);
-            if ($payable) {
-                $productName = $payable->name;
-                // Add base package price to line items
-                $lineItems[] = [
+            // Prepare line items for the subscription
+            $lineItems = [
+                [
+                    'price' => $stripePrice->id,
+                    'quantity' => 1,
+                ],
+            ];
+
+            // Add addons as additional line items
+            $addonTotal = 0;
+            if (!empty($addonIds)) {
+                foreach ($addonIds as $addonId) {
+                    $addon = PackageAddon::find($addonId);
+                    if ($addon) {
+                        // Create Stripe Price for the addon
+                        $addonPrice = \Stripe\Price::create([
+                            'unit_amount' => $addon->price * 100,
+                            'currency' => $currency,
+                            'recurring' => ['interval' => 'month'], // Same interval as the base package
+                            'product_data' => [
+                                'name' => $addon->addon_name,
+                            ],
+                        ]);
+
+                        // Add the addon to the line items
+                        $lineItems[] = [
+                            'price' => $addonPrice->id,
+                            'quantity' => 1,
+                        ];
+
+                        $addonTotal += $addon->price;
+                    }
+                }
+
+                // Add the addon total to the final payment amount
+                $finalAmount += $addonTotal;
+
+                // Create user package addons
+                createUserPackageAddons($userId, $payableId, $addonIds, $payment->id);
+            }
+
+            // Create the Stripe subscription with all line items
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'mode' => 'subscription',
+                'customer' => $user->stripe_customer_id,
+                'line_items' => $lineItems,
+                'success_url' => $successUrl,
+                'cancel_url' => $cancelUrl,
+            ]);
+        } else {
+            // One-time payment
+            $lineItems = [
+                [
                     'price_data' => [
                         'currency' => $currency,
                         'product_data' => [
-                            'name' => $productName, // Product name for the package
+                            'name' => 'One-time Payment for ' . $payableType,
                         ],
-                        'unit_amount' => $finalAmount * 100, // Amount in cents
+                        'unit_amount' => $finalAmount * 100,
                     ],
                     'quantity' => 1,
-                ];
-            }
-        }
+                ],
+            ];
 
-        // If there are addons, add them as additional line items
-        $addonTotal = 0; // To track the total addon price
-        if (!empty($addonIds)) {
-            foreach ($addonIds as $addonId) {
-                $addon = PackageAddon::find($addonId);
-                if ($addon) {
-                    $lineItems[] = [
-                        'price_data' => [
-                            'currency' => $currency,
-                            'product_data' => [
-                                'name' => $addon->addon_name, // Product name for the addon
+            // Add addons as additional line items for one-time payment
+            $addonTotal = 0;
+            if (!empty($addonIds)) {
+                foreach ($addonIds as $addonId) {
+                    $addon = PackageAddon::find($addonId);
+                    if ($addon) {
+                        $lineItems[] = [
+                            'price_data' => [
+                                'currency' => $currency,
+                                'product_data' => [
+                                    'name' => $addon->addon_name,
+                                ],
+                                'unit_amount' => $addon->price * 100,
                             ],
-                            'unit_amount' => $addon->price * 100, // Addon price in cents
-                        ],
-                        'quantity' => 1,
-                    ];
-                    $addonTotal += $addon->price; // Add the addon price to the total
+                            'quantity' => 1,
+                        ];
+
+                        $addonTotal += $addon->price;
+                    }
                 }
+
+                // Add the addon total to the final payment amount
+                $finalAmount += $addonTotal;
+
+                // Create user package addons
+                createUserPackageAddons($userId, $payableId, $addonIds, $payment->id);
             }
 
-            // Add the addon total to the final payment amount
-            $finalAmount += $addonTotal;
-
-
-            createUserPackageAddons($userId, $payableId, $addonIds, $payment->id);
-
+            // Create the Stripe Checkout session for one-time payment
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'mode' => 'payment',
+                'customer' => $user->stripe_customer_id,
+                'line_items' => $lineItems,
+                'success_url' => $successUrl,
+                'cancel_url' => $cancelUrl,
+            ]);
         }
 
-
-
-
-
-
-
-        // Update the payment record with the final amount (base amount + addons + discount)
-        $payment->update(['amount' => $finalAmount]);
-
-        // Create the Stripe session
-        $session = \Stripe\Checkout\Session::create([
-            'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
-            'line_items' => $lineItems,
-            'mode' => 'payment',
-            'success_url' => $successUrl,
-            'cancel_url' => $cancelUrl,
-        ]);
-
-        // Update the payment with the transaction ID (Stripe session ID)
+        // Update payment with session ID
         $payment->update(['session_id' => $session->id]);
 
         return response()->json(['session_url' => $session->url]);
@@ -154,12 +213,11 @@ function createStripeCheckoutSession(array $data): JsonResponse
 function createUserPackageAddons(int $userId, int $packageId, array $addonIds, int $purchaseId): void
 {
     foreach ($addonIds as $addonId) {
-        // Create a record in the user_package_addons table for each addon with the associated purchase ID
         UserPackageAddon::create([
             'user_id' => $userId,
             'package_id' => $packageId,
             'addon_id' => $addonId,
-            'purchase_id' => $purchaseId,  // Link the purchase (payment) to the addon
+            'purchase_id' => $purchaseId,
         ]);
     }
 }
