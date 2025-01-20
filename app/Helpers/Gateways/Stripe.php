@@ -47,7 +47,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
     try {
         // Set Stripe API key
         Stripe::setApiKey(config('STRIPE_SECRET'));
-
+    
         // Retrieve or create Stripe Customer
         $user = User::find($userId);
         if (!$user->stripe_customer_id) {
@@ -76,14 +76,14 @@ function createStripeCheckoutSession(array $data): JsonResponse
                 }
             }
         }
-
+    
         // Prepare success and cancel URLs
         $successUrl = "{$baseSuccessUrl}?session_id={CHECKOUT_SESSION_ID}";
         $cancelUrl = "{$baseCancelUrl}?session_id={CHECKOUT_SESSION_ID}";
-
+    
         // Prepare line items for the Checkout Session
         $lineItems = [];
-
+    
         // Add base package price to line items
         if ($payableType === 'App\\Models\\Package' && $payableId) {
             $payable = Package::find($payableId);
@@ -97,7 +97,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                     'unit_amount' => $finalAmount * 100, // Amount in cents
                     'recurring' => $isRecurring ? ['interval' => 'day'] : null,
                 ]);
-
+    
                 // Add the Price ID to the line items
                 $lineItems[] = [
                     'price' => $price->id, // Use the Price ID
@@ -105,7 +105,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                 ];
             }
         }
-
+    
         // Add addons as additional line items
         $addonTotal = 0;
         if (!empty($addonIds)) {
@@ -121,7 +121,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                         'unit_amount' => $addon->price * 100, // Addon price in cents
                         'recurring' => $isRecurring ? ['interval' => 'day'] : null,
                     ]);
-
+    
                     // Add the Price ID to the line items
                     $lineItems[] = [
                         'price' => $price->id, // Use the Price ID
@@ -130,14 +130,14 @@ function createStripeCheckoutSession(array $data): JsonResponse
                     $addonTotal += $addon->price;
                 }
             }
-
+    
             // Add the addon total to the final payment amount
             $finalAmount += $addonTotal;
-
+    
             // Create user package addons
             createUserPackageAddons($userId, $payableId, $addonIds, null); // Pass null for purchase_id (will be updated later)
         }
-
+    
         // Step 1: Create a Checkout Session
         $sessionData = [
             'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
@@ -146,16 +146,18 @@ function createStripeCheckoutSession(array $data): JsonResponse
             'line_items' => $lineItems,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
-            'metadata' => [
-                'package_id' => $payableId, // Add package_id to metadata
-                'user_id' => $userId, // Optionally add user_id to metadata
-                'business_name' => $business_name, // Optionally add business_name to metadata
+            'subscription_data' => [
+                'metadata' => [
+                    'package_id' => $payableId, // Add package_id to subscription metadata
+                    'user_id' => $userId, // Optionally add user_id to metadata
+                    'business_name' => $business_name, // Optionally add business_name to metadata
+                ],
             ],
         ];
-
+    
         // Create the Checkout Session
         $session = \Stripe\Checkout\Session::create($sessionData);
-
+    
         // Create a payment record only for one-time payments
         if (!$isRecurring) {
             $payment = Payment::create([
@@ -171,18 +173,18 @@ function createStripeCheckoutSession(array $data): JsonResponse
                 'coupon_id' => $couponId,
                 'is_recurring' => false,
             ]);
-
+    
             // Update the session URL with the payment ID
             $successUrl = "{$baseSuccessUrl}?payment_id={$payment->id}&session_id={CHECKOUT_SESSION_ID}";
             $cancelUrl = "{$baseCancelUrl}?payment_id={$payment->id}&session_id={CHECKOUT_SESSION_ID}";
-
+    
             // Update the session with the new URLs
             $session = \Stripe\Checkout\Session::update($session->id, [
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
             ]);
         }
-
+    
         // Return the Checkout Session URL
         return response()->json(['session_url' => $session->url]);
     } catch (\Exception $e) {
