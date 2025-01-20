@@ -94,6 +94,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                             'name' => $payable->name,
                         ],
                         'unit_amount' => $finalAmount * 100, // Amount in cents
+                        'recurring' => $isRecurring ? ['interval' => 'month'] : null, // Add recurring for subscriptions
                     ],
                     'quantity' => 1,
                 ];
@@ -113,6 +114,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                                 'name' => $addon->addon_name,
                             ],
                             'unit_amount' => $addon->price * 100, // Addon price in cents
+                            'recurring' => $isRecurring ? ['interval' => 'month'] : null, // Add recurring for subscriptions
                         ],
                         'quantity' => 1,
                     ];
