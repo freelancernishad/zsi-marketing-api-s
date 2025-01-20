@@ -94,7 +94,8 @@ function createStripeCheckoutSession(array $data): JsonResponse
                             'name' => $payable->name,
                         ],
                         'unit_amount' => $finalAmount * 100, // Amount in cents
-                        'recurring' => $isRecurring ? ['interval' => 'month'] : null, // Add recurring for subscriptions
+                        'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                        // 'recurring' => $isRecurring ? ['interval' => 'month'] : null,
                     ],
                     'quantity' => 1,
                 ];
@@ -114,7 +115,8 @@ function createStripeCheckoutSession(array $data): JsonResponse
                                 'name' => $addon->addon_name,
                             ],
                             'unit_amount' => $addon->price * 100, // Addon price in cents
-                            'recurring' => $isRecurring ? ['interval' => 'month'] : null, // Add recurring for subscriptions
+                            'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                            // 'recurring' => $isRecurring ? ['interval' => 'month'] : null,
                         ],
                         'quantity' => 1,
                     ];
@@ -129,27 +131,40 @@ function createStripeCheckoutSession(array $data): JsonResponse
             createUserPackageAddons($userId, $payableId, $addonIds, null); // Pass null for purchase_id (will be updated later)
         }
 
-        // Create the Stripe session
-        $sessionData = [
-            'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
-            'mode' => $isRecurring ? 'subscription' : 'payment', // Set mode based on is_recurring flag
-            'customer' => $user->stripe_customer_id,
-            'line_items' => $lineItems,
-            'success_url' => $successUrl,
-            'cancel_url' => $cancelUrl,
-        ];
+// Step 1: Create a test clock
+$testClock = \Stripe\TestHelpers\TestClock::create([
+    'frozen_time' => time() + 300, // Freeze time 5 minutes from now
+]);
 
-        // Add subscription metadata for recurring payments
-        if ($isRecurring) {
-            $sessionData['subscription_data'] = [
-                'metadata' => [
-                    'package_id' => $payableId, // Include package ID in metadata
-                    'business_name' => $business_name, // Include business name in metadata
-                ],
-            ];
-        }
+// Step 2: Create the Stripe session
+$sessionData = [
+    'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
+    'mode' => $isRecurring ? 'subscription' : 'payment', // Set mode based on is_recurring flag
+    'customer' => $user->stripe_customer_id,
+    'line_items' => $lineItems,
+    'success_url' => $successUrl,
+    'cancel_url' => $cancelUrl,
+];
 
-        $session = \Stripe\Checkout\Session::create($sessionData);
+// Add subscription metadata and test clock for recurring payments
+if ($isRecurring) {
+    $sessionData['subscription_data'] = [
+        'test_clock' => $testClock->id, // Attach the test clock
+        'metadata' => [
+            'package_id' => $payableId, // Include package ID in metadata
+            'business_name' => $business_name, // Include business name in metadata
+        ],
+    ];
+}
+
+// Create the Stripe session
+$session = \Stripe\Checkout\Session::create($sessionData);
+
+// Step 3: Advance the test clock by 5 minutes
+$testClock->advance([
+    'frozen_time' => time() + 300, // Advance by 5 minutes (300 seconds)
+]);
+
 
         // Create a payment record only for one-time payments
         if (!$isRecurring) {
