@@ -130,7 +130,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
 
             // Create the Stripe subscription with all line items
             $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
+                'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
                 'mode' => 'subscription',
                 'customer' => $user->stripe_customer_id,
                 'line_items' => $lineItems,
@@ -182,7 +182,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
 
             // Create the Stripe Checkout session for one-time payment
             $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
+                'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
                 'mode' => 'payment',
                 'customer' => $user->stripe_customer_id,
                 'line_items' => $lineItems,
