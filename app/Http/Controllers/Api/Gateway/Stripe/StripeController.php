@@ -126,6 +126,7 @@ class StripeController extends Controller
                             'paid_at' => now(),
                             'payable_type' => 'App\\Models\\Package',
                             'payable_id' => $userPackage->package_id,
+                            'user_package_id' => $userPackage->id,
                             'business_name' => $userPackage->business_name,
                             'is_recurring' => true,
                             'response_data' => json_encode($event),
