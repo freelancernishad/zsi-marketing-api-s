@@ -44,7 +44,6 @@ function createStripeCheckoutSession(array $data): JsonResponse
     if ($finalAmount <= 0) {
         return response()->json(['error' => 'Payment amount must be greater than zero'], 400);
     }
-
     try {
         // Set Stripe API key
         Stripe::setApiKey(config('STRIPE_SECRET'));
@@ -140,15 +139,22 @@ function createStripeCheckoutSession(array $data): JsonResponse
         }
 
         // Step 1: Create a Checkout Session
-        $session = \Stripe\Checkout\Session::create([
+        $sessionData = [
             'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
-            'mode' => 'subscription', // Use 'subscription' mode for recurring payments
+            'mode' => $isRecurring ? 'subscription' : 'payment', // Use 'subscription' mode for recurring payments
             'customer' => $user->stripe_customer_id,
             'line_items' => $lineItems,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
+            'metadata' => [
+                'package_id' => $payableId, // Add package_id to metadata
+                'user_id' => $userId, // Optionally add user_id to metadata
+                'business_name' => $business_name, // Optionally add business_name to metadata
+            ],
+        ];
 
-        ]);
+        // Create the Checkout Session
+        $session = \Stripe\Checkout\Session::create($sessionData);
 
         // Create a payment record only for one-time payments
         if (!$isRecurring) {
@@ -174,9 +180,6 @@ function createStripeCheckoutSession(array $data): JsonResponse
             $session = \Stripe\Checkout\Session::update($session->id, [
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
-                'metadata' => [
-                    'package_id' => $payableId, // Add package_id to metadata
-                ],
             ]);
         }
 
