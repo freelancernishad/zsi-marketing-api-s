@@ -139,68 +139,27 @@ function createStripeCheckoutSession(array $data): JsonResponse
             createUserPackageAddons($userId, $payableId, $addonIds, null); // Pass null for purchase_id (will be updated later)
         }
 
-        // // Step 1: Create a Checkout Session
-        // $sessionData = [
-        //     'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
-        //     'mode' => $isRecurring ? 'subscription' : 'payment', // Use 'subscription' mode for recurring payments
-        //     'customer' => $user->stripe_customer_id,
-        //     'line_items' => $lineItems,
-        //     'success_url' => $successUrl,
-        //     'cancel_url' => $cancelUrl,
-        //     'subscription_data' => [
-        //         'metadata' => [
-        //             'package_id' => $payableId, // Add package_id to subscription metadata
-        //             'user_id' => $userId, // Optionally add user_id to metadata
-        //             'business_name' => $business_name, // Optionally add business_name to metadata
-        //         ],
-        //     ],
-        // ];
-
-        // // Create the Checkout Session
-        // $session = \Stripe\Checkout\Session::create($sessionData);
-
-
-
-    // Step 1: Create a Test Clock (only for testing)
-    $testClock = \Stripe\TestHelpers\TestClock::create([
-        'frozen_time' => time(), // Freeze the clock at the current time
-    ]);
-
-    // Step 2: Create the Subscription directly with the Test Clock
-    $subscription = \Stripe\Subscription::create([
-        'customer' => $user->stripe_customer_id,
-        'items' => [
-            [
-                'price' => $price->id, // Use the Price ID from the package
+        // Step 1: Create a Checkout Session
+        $sessionData = [
+            'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
+            'mode' => $isRecurring ? 'subscription' : 'payment', // Use 'subscription' mode for recurring payments
+            'customer' => $user->stripe_customer_id,
+            'line_items' => $lineItems,
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
+            'subscription_data' => [
+                'metadata' => [
+                    'package_id' => $payableId, // Add package_id to subscription metadata
+                    'user_id' => $userId, // Optionally add user_id to metadata
+                    'business_name' => $business_name, // Optionally add business_name to metadata
+                ],
             ],
-        ],
-        'metadata' => [
-            'package_id' => $payableId, // Add package_id to subscription metadata
-            'user_id' => $userId, // Optionally add user_id to metadata
-            'business_name' => $business_name, // Optionally add business_name to metadata
-        ],
-        // 'test_clock' => $testClock->id, // Attach the Test Clock (only for testing)
-    ]);
+        ];
 
-    // Step 3: Advance the Test Clock by 5 minutes (300 seconds) (only for testing)
-    $testClock->advance([
-        'frozen_time' => time() + 300, // Advance by 5 minutes
-    ]);
+        // Create the Checkout Session
+        $session = \Stripe\Checkout\Session::create($sessionData);
 
-    // Step 4: Create a Checkout Session for the Subscription
-    $session = \Stripe\Checkout\Session::create([
-        'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
-        'mode' => 'subscription', // Use 'subscription' mode for recurring payments
-        'customer' => $user->stripe_customer_id,
-        'line_items' => [
-            [
-                'price' => $price->id, // Use the Price ID from the subscription
-                'quantity' => 1,
-            ],
-        ],
-        'success_url' => $successUrl,
-        'cancel_url' => $cancelUrl,
-    ]);
+
 
 
 
