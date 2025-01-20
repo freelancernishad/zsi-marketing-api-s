@@ -94,7 +94,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                     'price_data' => [
                         'currency' => $currency,
                         'product' => [
-                            'name' => $payable->name, // Correct PHP syntax
+                            'name' => "$payable->name", // Correct PHP syntax
                         ],
                         'unit_amount' => $finalAmount * 100, // Amount in cents
                         'recurring' => $isRecurring ? ['interval' => 'day'] : null,
@@ -114,7 +114,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                         'price_data' => [
                             'currency' => $currency,
                             'product' => [
-                                'name' => $addon->addon_name, // Correct PHP syntax
+                                'name' => "$addon->addon_name", // Correct PHP syntax
                             ],
                             'unit_amount' => $addon->price * 100, // Addon price in cents
                             'recurring' => $isRecurring ? ['interval' => 'day'] : null,
