@@ -133,6 +133,7 @@ class StripeController extends Controller
                             $user = User::where('stripe_customer_id', $stripeCustomer->id)->first();
 
                             Log::info($user);
+                            Log::info($packageId);
 
                             if ($user && $packageId) {
                                 // Create a new UserPackage
