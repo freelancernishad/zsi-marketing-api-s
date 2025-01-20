@@ -115,7 +115,7 @@ class StripeController extends Controller
                     case 'invoice.payment_succeeded':
                         // Handle successful subscription payment
                         $invoice = $event->data->object;
-                        Log::info($invoice);
+
 
                         // Find the UserPackage by Stripe subscription ID
                         $userPackage = UserPackage::where('stripe_subscription_id', $invoice->subscription)->first();
@@ -150,7 +150,7 @@ class StripeController extends Controller
                                 return response()->json(['error' => 'User or package not found'], 400);
                             }
                         }
-
+                        Log::info($userPackage);
                         // Create a new payment record for the successful charge
                         $payment = Payment::create([
                             'user_id' => $userPackage->user_id,
@@ -167,7 +167,7 @@ class StripeController extends Controller
                             'is_recurring' => true,
                             'response_data' => json_encode($event),
                         ]);
-
+                        Log::info($payment);
                         // Update the next billing date
                         $userPackage->update([
                             'next_billing_at' => Carbon::createFromTimestamp($invoice->lines->data[0]->period->end),
