@@ -140,45 +140,12 @@ function createStripeCheckoutSession(array $data): JsonResponse
             createUserPackageAddons($userId, $payableId, $addonIds, null); // Pass null for purchase_id (will be updated later)
         }
     
-        // Step 1: Create a test clock (only in test mode)
-        $testClock = TestClock::create([
-            'frozen_time' => time() + 300, // Freeze time 5 minutes from now
-        ]);
-    
-        // Step 2: Create the subscription directly (not using Checkout Session)
-        $subscriptionData = [
-            'customer' => $user->stripe_customer_id,
-            'items' => [
-                [
-                    'price' => $price->id, // Use the Price ID
-                    'quantity' => 1,
-                ],
-            ],
-            'metadata' => [
-                'package_id' => $payableId, // Include package ID in metadata
-                'business_name' => $business_name, // Include business name in metadata
-            ],
-        ];
-    
-        // Create the subscription
-        $subscription = \Stripe\Subscription::create($subscriptionData);
-    
-        // Step 3: Advance the test clock by 5 minutes
-        $testClock->advance([
-            'frozen_time' => time() + 300, // Advance by 5 minutes (300 seconds)
-        ]);
-    
-        // Step 4: Create a Checkout Session for the subscription (optional)
+        // Step 1: Create a Checkout Session
         $session = \Stripe\Checkout\Session::create([
             'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
-            'mode' => 'subscription',
+            'mode' => 'subscription', // Use 'subscription' mode for recurring payments
             'customer' => $user->stripe_customer_id,
-            'line_items' => [
-                [
-                    'price' => $price->id, // Use the Price ID
-                    'quantity' => 1,
-                ],
-            ],
+            'line_items' => $lineItems,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
         ]);
