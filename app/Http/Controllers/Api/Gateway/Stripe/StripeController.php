@@ -119,7 +119,7 @@ class StripeController extends Controller
 
                         // Find the UserPackage by Stripe subscription ID
                         $userPackage = UserPackage::where('stripe_subscription_id', $invoice->subscription)->first();
-                        Log::info($userPackage);
+
                         // If UserPackage does not exist, create it
                         if (!$userPackage) {
                             // Retrieve the Stripe subscription to get details
@@ -132,6 +132,8 @@ class StripeController extends Controller
                             $stripeCustomer = \Stripe\Customer::retrieve($stripeSubscription->customer);
                             $user = User::where('stripe_customer_id', $stripeCustomer->id)->first();
 
+                            Log::info($user);
+                            Log::info($packageId);
                             if ($user && $packageId) {
                                 // Create a new UserPackage
                                 $userPackage = UserPackage::create([
@@ -145,12 +147,12 @@ class StripeController extends Controller
                                     'status' => 'active',
                                 ]);
                             } else {
-                                // Log an error if the user or package ID is not found
+
                                 Log::error("User or package not found for Stripe subscription: {$invoice->subscription}");
                                 return response()->json(['error' => 'User or package not found'], 400);
                             }
                         }
-                        Log::info($userPackage);
+
                         // Create a new payment record for the successful charge
                         $payment = Payment::create([
                             'user_id' => $userPackage->user_id,
@@ -167,7 +169,7 @@ class StripeController extends Controller
                             'is_recurring' => true,
                             'response_data' => json_encode($event),
                         ]);
-                        Log::info($payment);
+
                         // Update the next billing date
                         $userPackage->update([
                             'next_billing_at' => Carbon::createFromTimestamp($invoice->lines->data[0]->period->end),
