@@ -80,7 +80,7 @@ class StripeController extends Controller
                     if ($payment) {
                         // Update payment status
                         $payment->update([
-                            'transaction_id' => $session->payment_intent,
+                            'transaction_id' => uniqid(),
                             'status' => 'completed',
                             'paid_at' => now(),
                             'response_data' => json_encode($event),
