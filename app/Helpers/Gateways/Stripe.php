@@ -130,14 +130,26 @@ function createStripeCheckoutSession(array $data): JsonResponse
         }
 
         // Create the Stripe session
-        $session = \Stripe\Checkout\Session::create([
+        $sessionData = [
             'payment_method_types' => ['card', 'amazon_pay', 'us_bank_account'],
             'mode' => $isRecurring ? 'subscription' : 'payment', // Set mode based on is_recurring flag
             'customer' => $user->stripe_customer_id,
             'line_items' => $lineItems,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
-        ]);
+        ];
+
+        // Add subscription metadata for recurring payments
+        if ($isRecurring) {
+            $sessionData['subscription_data'] = [
+                'metadata' => [
+                    'package_id' => $payableId, // Include package ID in metadata
+                    'business_name' => $business_name, // Include business name in metadata
+                ],
+            ];
+        }
+
+        $session = \Stripe\Checkout\Session::create($sessionData);
 
         // Create a payment record only for one-time payments
         if (!$isRecurring) {
