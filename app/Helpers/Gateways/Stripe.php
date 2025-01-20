@@ -179,7 +179,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
             'user_id' => $userId, // Optionally add user_id to metadata
             'business_name' => $business_name, // Optionally add business_name to metadata
         ],
-        'test_clock' => $testClock->id, // Attach the Test Clock (only for testing)
+        // 'test_clock' => $testClock->id, // Attach the Test Clock (only for testing)
     ]);
 
     // Step 3: Advance the Test Clock by 5 minutes (300 seconds) (only for testing)
