@@ -255,11 +255,12 @@ class StripeController extends Controller
         try {
             // Retrieve the Stripe customer
             $stripeCustomer = \Stripe\Customer::retrieve($stripeCustomerId);
+            Log::info("stripeCustomer = $stripeCustomer");
 
             // Retrieve the default payment method
             if ($stripeCustomer->invoice_settings->default_payment_method) {
                 $paymentMethod = \Stripe\PaymentMethod::retrieve($stripeCustomer->invoice_settings->default_payment_method);
-
+                Log::info("paymentMethod = $paymentMethod");
                 // Save card details to the UserPackage
                 if ($paymentMethod && $paymentMethod->card) {
                     $userPackage->update([
