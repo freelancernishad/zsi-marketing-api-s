@@ -244,51 +244,50 @@ class StripeController extends Controller
     }
 
     private function savePaymentMethodDetails(UserPackage $userPackage, string $stripeCustomerId)
-    {private function savePaymentMethodDetails(UserPackage $userPackage, string $stripeCustomerId)
-        {
-            try {
-                // Retrieve the Stripe customer
-                $stripeCustomer = \Stripe\Customer::retrieve($stripeCustomerId);
-                Log::info("Stripe Customer: " . json_encode($stripeCustomer));
-        
-                // Retrieve the customer's subscriptions
-                $subscriptions = \Stripe\Subscription::all([
-                    'customer' => $stripeCustomerId,
-                    'limit' => 1, // Get the most recent subscription
-                ]);
-        
-                if (count($subscriptions->data) > 0) {
-                    $subscription = $subscriptions->data[0];
-        
-                    // Retrieve the latest invoice for the subscription
-                    $invoice = \Stripe\Invoice::retrieve($subscription->latest_invoice);
-        
-                    // Retrieve the payment intent associated with the invoice
-                    $paymentIntent = \Stripe\PaymentIntent::retrieve($invoice->payment_intent);
-        
-                    // Retrieve the payment method used for the payment intent
-                    if ($paymentIntent->payment_method) {
-                        $paymentMethod = \Stripe\PaymentMethod::retrieve($paymentIntent->payment_method);
-                        Log::info("Payment Method from PaymentIntent: " . json_encode($paymentMethod));
-        
-                        // Attach the payment method to the customer (if not already attached)
-                        if ($paymentMethod->customer !== $stripeCustomerId) {
-                            $paymentMethod->attach(['customer' => $stripeCustomerId]);
-                            Log::info("Payment method attached to customer: " . $stripeCustomerId);
-                        }
-        
-                        // Save payment method details to the UserPackage
-                        $this->updateUserPackageWithPaymentMethod($userPackage, $paymentMethod);
-                    } else {
-                        Log::warning("No payment method found for PaymentIntent: " . $paymentIntent->id);
-                    }
-                } else {
-                    Log::warning("No subscriptions found for customer: " . $stripeCustomerId);
+{
+    try {
+        // Retrieve the Stripe customer
+        $stripeCustomer = \Stripe\Customer::retrieve($stripeCustomerId);
+        Log::info("Stripe Customer: " . json_encode($stripeCustomer));
+
+        // Retrieve the customer's subscriptions
+        $subscriptions = \Stripe\Subscription::all([
+            'customer' => $stripeCustomerId,
+            'limit' => 1, // Get the most recent subscription
+        ]);
+
+        if (count($subscriptions->data) > 0) {
+            $subscription = $subscriptions->data[0];
+
+            // Retrieve the latest invoice for the subscription
+            $invoice = \Stripe\Invoice::retrieve($subscription->latest_invoice);
+
+            // Retrieve the payment intent associated with the invoice
+            $paymentIntent = \Stripe\PaymentIntent::retrieve($invoice->payment_intent);
+
+            // Retrieve the payment method used for the payment intent
+            if ($paymentIntent->payment_method) {
+                $paymentMethod = \Stripe\PaymentMethod::retrieve($paymentIntent->payment_method);
+                Log::info("Payment Method from PaymentIntent: " . json_encode($paymentMethod));
+
+                // Attach the payment method to the customer (if not already attached)
+                if ($paymentMethod->customer !== $stripeCustomerId) {
+                    $paymentMethod->attach(['customer' => $stripeCustomerId]);
+                    Log::info("Payment method attached to customer: " . $stripeCustomerId);
                 }
-            } catch (\Exception $e) {
-                Log::error('Failed to save PaymentMethod details: ' . $e->getMessage());
+
+                // Save payment method details to the UserPackage
+                $this->updateUserPackageWithPaymentMethod($userPackage, $paymentMethod);
+            } else {
+                Log::warning("No payment method found for PaymentIntent: " . $paymentIntent->id);
             }
+        } else {
+            Log::warning("No subscriptions found for customer: " . $stripeCustomerId);
         }
+    } catch (\Exception $e) {
+        Log::error('Failed to save PaymentMethod details: ' . $e->getMessage());
+    }
+}
     
     /**
      * Update UserPackage with payment method details.
