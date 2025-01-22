@@ -21,6 +21,17 @@ class UserPackage extends Model
         'status', // Add subscription status (active, canceled, expired)
         'canceled_at', // Add canceled_at timestamp
         'next_billing_at', // Add next billing date
+
+        'payment_method_type',
+        'card_brand',
+        'card_last_four',
+        'card_exp_month',
+        'card_exp_year',
+        'bank_name',
+        'iban_last_four',
+        'account_holder_type',
+        'account_last_four',
+        'routing_number',
     ];
 
     /**
