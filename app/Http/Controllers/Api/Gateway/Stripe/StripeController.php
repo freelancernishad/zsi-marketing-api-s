@@ -83,7 +83,6 @@ class StripeController extends Controller
                         if ($payment) {
                             // Update payment status
                             $payment->update([
-                                'transaction_id' => $session->payment_intent,
                                 'status' => 'completed',
                                 'paid_at' => now(),
                                 'response_data' => json_encode($event),
@@ -162,7 +161,7 @@ class StripeController extends Controller
                         'amount' => $invoice->amount_paid / 100, // Convert from cents to dollars
                         'currency' => $invoice->currency,
                         'status' => 'completed',
-                        'transaction_id' => $invoice->payment_intent,
+            
                         'paid_at' => now(),
                         'payable_type' => 'App\\Models\\Package',
                         'payable_id' => $userPackage->package_id,
@@ -198,7 +197,7 @@ class StripeController extends Controller
                             'amount' => $invoice->amount_due / 100, // Convert from cents to dollars
                             'currency' => $invoice->currency,
                             'status' => 'failed',
-                            'transaction_id' => $invoice->payment_intent,
+
                             'payable_type' => 'App\\Models\\Package',
                             'payable_id' => $userPackage->package_id,
                             'business_name' => $userPackage->business_name,

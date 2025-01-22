@@ -11,7 +11,7 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id', 'gateway', 'session_id','transaction_id', 'currency', 'amount', 'fee',
-        'status', 'response_data', 'payment_method', 'payer_email', 'paid_at','coupon_id','payable_type','payable_id','user_package_id', 'business_name' 
+        'status', 'response_data', 'payment_method', 'payer_email', 'paid_at','coupon_id','payable_type','payable_id','user_package_id', 'business_name'
     ];
 
     protected $casts = [
@@ -103,7 +103,29 @@ class Payment extends Model
         return $query->where('payable_type', $payableType)->where('payable_id', $payableId);
     }
 
+    protected static function boot()
+    {
+        parent::boot();
 
+        // Generate a unique transaction_id before creating the payment
+        static::creating(function ($payment) {
+            if (empty($payment->transaction_id)) {
+                $payment->transaction_id = static::generateUniqueTransactionId();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique transaction ID.
+     *
+     * @return string
+     */
+    public static function generateUniqueTransactionId()
+    {
+        $prefix = 'txn_'; // Prefix for the transaction ID
+        $uniqueId = Str::uuid()->toString(); // Generate a UUID
+        return $prefix . $uniqueId;
+    }
 
 
 

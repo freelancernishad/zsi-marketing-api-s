@@ -173,7 +173,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                 'amount' => $finalAmount,
                 'currency' => $currency,
                 'status' => 'pending',
-                'transaction_id' => $session->id, // Use session ID as transaction ID
+                'session_id' => $session->id, // Use session ID as transaction ID
                 'payable_type' => $payableType,
                 'payable_id' => $payableId,
                 'business_name' => $business_name,
