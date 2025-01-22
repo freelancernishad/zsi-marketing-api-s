@@ -107,81 +107,82 @@ class StripeController extends Controller
 
                                 // Update the payment with the UserPackage ID
                                 $payment->update(['user_package_id' => $userPackage->id]);
+
+                                // Save PaymentMethod details
+                                $this->savePaymentMethodDetails($userPackage, $session->customer);
                             }
                         }
                     }
                     break;
 
-                    case 'invoice.payment_succeeded':
-                        // Handle successful subscription payment
-                        $invoice = $event->data->object;
-                        Log::info($invoice);
+                case 'invoice.payment_succeeded':
+                    // Handle successful subscription payment
+                    $invoice = $event->data->object;
 
-                        // Find the UserPackage by Stripe subscription ID
-                        $userPackage = UserPackage::where('stripe_subscription_id', $invoice->subscription)->first();
+                    // Find the UserPackage by Stripe subscription ID
+                    $userPackage = UserPackage::where('stripe_subscription_id', $invoice->subscription)->first();
 
-                        // If UserPackage does not exist, create it
-                        if (!$userPackage) {
-                            // Retrieve the Stripe subscription to get details
-                            $stripeSubscription = \Stripe\Subscription::retrieve($invoice->subscription);
+                    // If UserPackage does not exist, create it
+                    if (!$userPackage) {
+                        // Retrieve the Stripe subscription to get details
+                        $stripeSubscription = \Stripe\Subscription::retrieve($invoice->subscription);
 
-                            // Retrieve the package ID from the subscription metadata or other source
-                            $packageId = $stripeSubscription->metadata->package_id ?? null; // Adjust based on your metadata
+                        // Retrieve the package ID from the subscription metadata or other source
+                        $packageId = $stripeSubscription->metadata->package_id ?? null; // Adjust based on your metadata
 
-                            // Retrieve the user ID from the Stripe customer
-                            $stripeCustomer = \Stripe\Customer::retrieve($stripeSubscription->customer);
-                            $user = User::where('stripe_customer_id', $stripeCustomer->id)->first();
+                        // Retrieve the user ID from the Stripe customer
+                        $stripeCustomer = \Stripe\Customer::retrieve($stripeSubscription->customer);
+                        $user = User::where('stripe_customer_id', $stripeCustomer->id)->first();
 
-                            Log::info($user);
-                            Log::info($stripeSubscription);
-
-                            if ($user && $packageId) {
-                                // Create a new UserPackage
-                                $userPackage = UserPackage::create([
-                                    'user_id' => $user->id,
-                                    'package_id' => $packageId,
-                                    'business_name' => $stripeSubscription->metadata->business_name ?? null, // Adjust based on your metadata
-                                    'started_at' => now(),
-                                    'ends_at' => now()->addMonths(1), // Default to 1 month (adjust as needed)
-                                    'stripe_subscription_id' => $invoice->subscription,
-                                    'stripe_customer_id' => $stripeSubscription->customer,
-                                    'status' => 'active',
-                                ]);
-                            } else {
-
-                                Log::error("User or package not found for Stripe subscription: {$invoice->subscription}");
-                                return response()->json(['error' => 'User or package not found'], 400);
-                            }
+                        if ($user && $packageId) {
+                            // Create a new UserPackage
+                            $userPackage = UserPackage::create([
+                                'user_id' => $user->id,
+                                'package_id' => $packageId,
+                                'business_name' => $stripeSubscription->metadata->business_name ?? null, // Adjust based on your metadata
+                                'started_at' => now(),
+                                'ends_at' => now()->addMonths(1), // Default to 1 month (adjust as needed)
+                                'stripe_subscription_id' => $invoice->subscription,
+                                'stripe_customer_id' => $stripeSubscription->customer,
+                                'status' => 'active',
+                            ]);
+                        } else {
+                            Log::error("User or package not found for Stripe subscription: {$invoice->subscription}");
+                            return response()->json(['error' => 'User or package not found'], 400);
                         }
+                    }
 
-                        // Create a new payment record for the successful charge
-                        $payment = Payment::create([
-                            'user_id' => $userPackage->user_id,
-                            'gateway' => 'stripe',
-                            'amount' => $invoice->amount_paid / 100, // Convert from cents to dollars
-                            'currency' => $invoice->currency,
-                            'status' => 'completed',
-                            'transaction_id' => $invoice->payment_intent,
-                            'paid_at' => now(),
-                            'payable_type' => 'App\\Models\\Package',
-                            'payable_id' => $userPackage->package_id,
-                            'user_package_id' => $userPackage->id,
-                            'business_name' => $userPackage->business_name,
-                            'is_recurring' => true,
-                            'response_data' => json_encode($event),
-                        ]);
+                    // Save PaymentMethod details
+                    $this->savePaymentMethodDetails($userPackage, $invoice->customer);
 
-                        // Update the next billing date
-                        $userPackage->update([
-                            'next_billing_at' => Carbon::createFromTimestamp($invoice->lines->data[0]->period->end),
-                        ]);
+                    // Create a new payment record for the successful charge
+                    $payment = Payment::create([
+                        'user_id' => $userPackage->user_id,
+                        'gateway' => 'stripe',
+                        'amount' => $invoice->amount_paid / 100, // Convert from cents to dollars
+                        'currency' => $invoice->currency,
+                        'status' => 'completed',
+                        'transaction_id' => $invoice->payment_intent,
+                        'paid_at' => now(),
+                        'payable_type' => 'App\\Models\\Package',
+                        'payable_id' => $userPackage->package_id,
+                        'user_package_id' => $userPackage->id,
+                        'business_name' => $userPackage->business_name,
+                        'is_recurring' => true,
+                        'response_data' => json_encode($event),
+                    ]);
 
-                        // Update UserPackageAddons with the payment ID
-                        UserPackageAddon::where('user_id', $userPackage->user_id)
-                            ->where('package_id', $userPackage->package_id)
-                            ->update(['purchase_id' => $payment->id]);
+                    // Update the next billing date
+                    $userPackage->update([
+                        'next_billing_at' => Carbon::createFromTimestamp($invoice->lines->data[0]->period->end),
+                    ]);
 
-                        break;
+                    // Update UserPackageAddons with the payment ID
+                    UserPackageAddon::where('user_id', $userPackage->user_id)
+                        ->where('package_id', $userPackage->package_id)
+                        ->update(['purchase_id' => $payment->id]);
+
+                    break;
 
                 case 'invoice.payment_failed':
                     // Handle failed subscription payment
@@ -240,6 +241,37 @@ class StripeController extends Controller
 
             // Return a 400 response to Stripe
             return response()->json(['error' => 'Webhook Error: ' . $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Save PaymentMethod details to the UserPackage.
+     *
+     * @param UserPackage $userPackage
+     * @param string $stripeCustomerId
+     */
+    private function savePaymentMethodDetails(UserPackage $userPackage, string $stripeCustomerId)
+    {
+        try {
+            // Retrieve the Stripe customer
+            $stripeCustomer = \Stripe\Customer::retrieve($stripeCustomerId);
+
+            // Retrieve the default payment method
+            if ($stripeCustomer->invoice_settings->default_payment_method) {
+                $paymentMethod = \Stripe\PaymentMethod::retrieve($stripeCustomer->invoice_settings->default_payment_method);
+
+                // Save card details to the UserPackage
+                if ($paymentMethod && $paymentMethod->card) {
+                    $userPackage->update([
+                        'card_brand' => $paymentMethod->card->brand,
+                        'card_last_four' => $paymentMethod->card->last4,
+                        'card_exp_month' => $paymentMethod->card->exp_month,
+                        'card_exp_year' => $paymentMethod->card->exp_year,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to save PaymentMethod details: ' . $e->getMessage());
         }
     }
 
