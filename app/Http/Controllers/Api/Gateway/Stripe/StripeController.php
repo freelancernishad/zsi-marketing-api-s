@@ -243,35 +243,94 @@ class StripeController extends Controller
         }
     }
 
-    /**
-     * Save PaymentMethod details to the UserPackage.
-     *
-     * @param UserPackage $userPackage
-     * @param string $stripeCustomerId
-     */
     private function savePaymentMethodDetails(UserPackage $userPackage, string $stripeCustomerId)
     {
         try {
             // Retrieve the Stripe customer
             $stripeCustomer = \Stripe\Customer::retrieve($stripeCustomerId);
-            Log::info("stripeCustomer = $stripeCustomer");
-
+            Log::info("Stripe Customer: " . json_encode($stripeCustomer));
+    
             // Retrieve the default payment method
             if ($stripeCustomer->invoice_settings->default_payment_method) {
                 $paymentMethod = \Stripe\PaymentMethod::retrieve($stripeCustomer->invoice_settings->default_payment_method);
-                Log::info("paymentMethod = $paymentMethod");
-                // Save card details to the UserPackage
-                if ($paymentMethod && $paymentMethod->card) {
-                    $userPackage->update([
-                        'card_brand' => $paymentMethod->card->brand,
-                        'card_last_four' => $paymentMethod->card->last4,
-                        'card_exp_month' => $paymentMethod->card->exp_month,
-                        'card_exp_year' => $paymentMethod->card->exp_year,
-                    ]);
+                Log::info("Default Payment Method: " . json_encode($paymentMethod));
+    
+                // Attach the payment method to the customer (if not already attached)
+                if ($paymentMethod->customer !== $stripeCustomerId) {
+                    $paymentMethod->attach(['customer' => $stripeCustomerId]);
+                    Log::info("Payment method attached to customer: " . $stripeCustomerId);
+                }
+    
+                // Save payment method details to the UserPackage
+                $this->updateUserPackageWithPaymentMethod($userPackage, $paymentMethod);
+            } else {
+                // Fallback: Retrieve all payment methods for the customer
+                $paymentMethods = \Stripe\PaymentMethod::all([
+                    'customer' => $stripeCustomerId,
+                    'type' => 'card', // You can include other types like 'sepa_debit', 'us_bank_account', etc.
+                ]);
+    
+                Log::info("All Payment Methods: " . json_encode($paymentMethods));
+    
+                if (count($paymentMethods->data) > 0) {
+                    // Use the most recent payment method
+                    $paymentMethod = $paymentMethods->data[0];
+                    Log::info("Using Most Recent Payment Method: " . json_encode($paymentMethod));
+    
+                    // Attach the payment method to the customer (if not already attached)
+                    if ($paymentMethod->customer !== $stripeCustomerId) {
+                        $paymentMethod->attach(['customer' => $stripeCustomerId]);
+                        Log::info("Payment method attached to customer: " . $stripeCustomerId);
+                    }
+    
+                    // Save payment method details to the UserPackage
+                    $this->updateUserPackageWithPaymentMethod($userPackage, $paymentMethod);
+                } else {
+                    // No payment methods found
+                    Log::warning("No payment methods found for customer: $stripeCustomerId");
                 }
             }
         } catch (\Exception $e) {
             Log::error('Failed to save PaymentMethod details: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Update UserPackage with payment method details.
+     *
+     * @param UserPackage $userPackage
+     * @param \Stripe\PaymentMethod $paymentMethod
+     */
+    private function updateUserPackageWithPaymentMethod(UserPackage $userPackage, \Stripe\PaymentMethod $paymentMethod)
+    {
+        if ($paymentMethod->type === 'card') {
+            // Save card details
+            $userPackage->update([
+                'payment_method_type' => 'card',
+                'card_brand' => $paymentMethod->card->brand,
+                'card_last_four' => $paymentMethod->card->last4,
+                'card_exp_month' => $paymentMethod->card->exp_month,
+                'card_exp_year' => $paymentMethod->card->exp_year,
+            ]);
+        } elseif ($paymentMethod->type === 'sepa_debit') {
+            // Save SEPA debit details
+            $userPackage->update([
+                'payment_method_type' => 'sepa_debit',
+                'bank_name' => $paymentMethod->sepa_debit->bank_name,
+                'iban_last_four' => $paymentMethod->sepa_debit->last4,
+            ]);
+        } elseif ($paymentMethod->type === 'us_bank_account') {
+            // Save US bank account details
+            $userPackage->update([
+                'payment_method_type' => 'us_bank_account',
+                'bank_name' => $paymentMethod->us_bank_account->bank_name,
+                'account_holder_type' => $paymentMethod->us_bank_account->account_holder_type,
+                'account_last_four' => $paymentMethod->us_bank_account->last4,
+                'routing_number' => $paymentMethod->us_bank_account->routing_number,
+            ]);
+        } else {
+            // Log unsupported payment method types
+            Log::warning("Unsupported payment method type: {$paymentMethod->type}");
         }
     }
 
