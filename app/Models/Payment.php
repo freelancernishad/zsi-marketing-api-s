@@ -104,6 +104,8 @@ class Payment extends Model
         return $query->where('payable_type', $payableType)->where('payable_id', $payableId);
     }
 
+
+
     protected static function boot()
     {
         parent::boot();
@@ -124,8 +126,13 @@ class Payment extends Model
     public static function generateUniqueTransactionId()
     {
         $prefix = 'txn_'; // Prefix for the transaction ID
-        $uniqueId = Str::uuid()->toString(); // Generate a UUID
-        return $prefix . $uniqueId;
+        $timestamp = now()->format('YmdHis'); // Current date and time in YYYYMMDDHHMMSS format
+        $randomString = Str::random(3); // Random alphanumeric string of 6 characters
+
+        // Combine prefix, timestamp, and random string
+        $transactionId = $prefix . $timestamp . '_' . $randomString;
+
+        return $transactionId;
     }
 
 
