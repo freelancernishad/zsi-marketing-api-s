@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 function createStripeCheckoutSession(array $data): JsonResponse
 {
     // Default values for optional parameters
+    $discountMonths = $data['discountMonths'] ?? 0;
     $amount = $data['amount'] ?? 100;
     $currency = $data['currency'] ?? 'USD';
     $userId = $data['user_id'] ?? null;
@@ -24,6 +25,16 @@ function createStripeCheckoutSession(array $data): JsonResponse
     $isRecurring = $data['is_recurring'] ?? false;
     $baseSuccessUrl = $data['success_url'] ?? 'http://localhost:8000/stripe/payment/success';
     $baseCancelUrl = $data['cancel_url'] ?? 'http://localhost:8000/stripe/payment/cancel';
+
+
+    $interval = 'month';
+    $intervalCount = $discountMonths > 1 ? $discountMonths : 1;
+
+    if ($discountMonths == 12) {
+        $interval = 'year';
+        $intervalCount = 1;
+    }
+
 
     // Initialize discount and final amount
     $discount = 0;
@@ -96,7 +107,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                         'name' => $payable->name,
                     ],
                     'unit_amount' => $finalAmount * 100, // Amount in cents
-                    'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                    'recurring' => $isRecurring ? ['interval' => $interval, 'interval_count' => $intervalCount] : null,
                 ]);
 
                 // Add the Price ID to the line items
@@ -120,7 +131,7 @@ function createStripeCheckoutSession(array $data): JsonResponse
                             'name' => $addon->addon_name,
                         ],
                         'unit_amount' => $addon->price * 100, // Addon price in cents
-                        'recurring' => $isRecurring ? ['interval' => 'day'] : null,
+                        'recurring' => $isRecurring ? ['interval' => $interval, 'interval_count' => $intervalCount] : null,
                     ]);
 
                     // Add the Price ID to the line items

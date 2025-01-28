@@ -143,6 +143,7 @@ class UserPackageController extends Controller
                 'coupon_id' => $couponId,
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
+                'discountMonths' => $discountMonths,
                 'is_recurring' => $isRecurring, // Pass the recurring flag
             ]);
 
