@@ -178,6 +178,9 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
 
     });
 
+
+
+
     // API routes for custom package requests
     Route::prefix('custom/package/requests')->group(function () {
         Route::get('/', [CustomPackageRequestController::class, 'index']); // List all requests

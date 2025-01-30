@@ -5,6 +5,8 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Api\Global\JobApplyController;
 use App\Http\Controllers\Api\Server\ServerStatusController;
 use App\Http\Controllers\Api\User\Package\UserPackageController;
+use App\Http\Controllers\Api\Admin\Blogs\Articles\ArticlesController;
+use App\Http\Controllers\Api\Admin\Blogs\Category\CategoryController;
 use App\Http\Controllers\Api\Admin\Careers\Jobs\CareersJobController;
 use App\Http\Controllers\Api\Admin\Package\CustomPackageRequestController;
 use App\Http\Controllers\Api\User\PackageAddon\UserPackageAddonController;
@@ -45,6 +47,27 @@ Route::get('/global/careers/jobs', [CareersJobController::class, 'index']);
 Route::get('/global/careers/jobs/{id}', [CareersJobController::class, 'show']);
 Route::post('/global/job-apply', [JobApplyController::class, 'store']);
 Route::get('/global/job-apply/{application_id}', [JobApplyController::class, 'searchByApplicationId']);
+
+
+
+
+    // Admin routes for blog categories
+    Route::group(['prefix' => 'blogs/categories',], function () {
+        Route::get('/', [CategoryController::class, 'index']);
+        Route::get('/{id}', [CategoryController::class, 'show']);
+        Route::get('/all/list', [CategoryController::class, 'list']);
+    });
+
+
+
+    Route::prefix('blogs/articles')->group(function () {
+        Route::get('/', [ArticlesController::class, 'index']);
+        Route::get('{id}', [ArticlesController::class, 'show']);
+        Route::get('/by-category/with-child-articles', [ArticlesController::class, 'getArticlesByCategory']);
+
+    });
+
+
 
 
 
