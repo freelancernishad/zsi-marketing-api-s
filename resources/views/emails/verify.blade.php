@@ -61,7 +61,7 @@
         </div>
         <div class="footer">
             <p>If you did not create an account, no further action is required.</p>
-            <p>Thank you,<br>{{ env('APP_NAME') }}</p>
+            <p>Thank you,<br>Zsi Marketing</p>
         </div>
     </div>
 </body>

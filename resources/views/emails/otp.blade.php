@@ -59,7 +59,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Welcome to {{ env('APP_NAME') }}</h1>
+            <h1>Welcome to Zsi Marketing</h1>
         </div>
         <p style="font-size: 16px; line-height: 1.5; color: #333;">
             Thank you for registering with us! To complete your registration, please use the following One-Time Password (OTP):
@@ -70,7 +70,7 @@
         </p>
         <div class="footer">
             <p>Thank you for choosing our service!</p>
-            <p>If you have any questions, feel free to <a target="_blank" href="#">contact us</a>.</p>
+            <p>If you have any questions, feel free to <a target="_blank" href="https://marketing.zsi.ai/contact">contact us</a>.</p>
         </div>
     </div>
 </body>
