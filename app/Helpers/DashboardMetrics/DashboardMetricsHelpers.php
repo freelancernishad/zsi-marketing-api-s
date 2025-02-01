@@ -15,6 +15,11 @@ function getPackageRevenueData($year = null, $week = 'current')
     $totalRevenueByPackageYearly = [];
     $totalRevenueByPackageWeekly = [];
 
+    // Private package tracking
+    $privateTotalRevenue = 0;
+    $privateTotalRevenueYearly = 0;
+    $privateWeeklyData = array_fill(0, 7, 0); // Weekly revenue for private packages
+
     // Define the week range based on the provided $week parameter
     if ($week === 'current') {
         $weekStart = Carbon::now()->startOfWeek();
@@ -24,7 +29,7 @@ function getPackageRevenueData($year = null, $week = 'current')
         $weekEnd = Carbon::now()->subWeek()->endOfWeek();
     }
 
-    $packages = Package::all();
+    $packages = Package::where('type', 'public')->get(); // Only public packages
     foreach ($packages as $package) {
         $monthlyData = array_fill(0, 12, 0);
 
@@ -51,22 +56,12 @@ function getPackageRevenueData($year = null, $week = 'current')
             'data' => $monthlyData,
         ];
 
-        $totalRevenueByPackage[] = [
-            'name' => $package->name,
-            'total_revenue' => $totalRevenue,
-        ];
-
         // Yearly Payments
         $yearlyRevenue = Payment::where('payable_type', 'App\\Models\\Package')
             ->where('payable_id', $package->id)
             ->completed()
             ->whereYear('paid_at', $year)
             ->sum('amount');
-
-        $totalRevenueByPackageYearly[] = [
-            'name' => $package->name,
-            'total_revenue_yearly' => (int) $yearlyRevenue,
-        ];
 
         // Weekly Payments
         $weeklyData = array_fill(0, 7, 0);
@@ -85,18 +80,82 @@ function getPackageRevenueData($year = null, $week = 'current')
             $weeklyData[$payment->day - 1] = (int) $payment->total_amount;
         }
 
+        // Public package revenue aggregation
+        $totalRevenueByPackage[] = [
+            'name' => $package->name,
+            'total_revenue' => $totalRevenue,
+        ];
+
+        $totalRevenueByPackageYearly[] = [
+            'name' => $package->name,
+            'total_revenue_yearly' => (int) $yearlyRevenue,
+        ];
+
         $totalRevenueByPackageWeekly[] = [
             'name' => $package->name,
             'data' => $weeklyData,
         ];
     }
 
-    $maxMonthlyRevenue = max(array_column($totalRevenueByPackage, 'total_revenue'));
+    // **New Separate Loop for Private Packages**
+    $privatePackages = Package::where('type', 'private')->get();
+    foreach ($privatePackages as $package) {
+        $totalRevenue = Payment::where('payable_type', 'App\\Models\\Package')
+            ->where('payable_id', $package->id)
+            ->completed()
+            ->whereYear('paid_at', $year)
+            ->sum('amount');
 
-    $maxWeeklyRevenue = 0;
-    foreach ($totalRevenueByPackageWeekly as $weeklyRevenue) {
-        $maxWeeklyRevenue = max($maxWeeklyRevenue, max($weeklyRevenue['data']));
+        $yearlyRevenue = Payment::where('payable_type', 'App\\Models\\Package')
+            ->where('payable_id', $package->id)
+            ->completed()
+            ->whereYear('paid_at', $year)
+            ->sum('amount');
+
+        $weeklyPayments = Payment::select(
+                DB::raw('DAYOFWEEK(paid_at) as day'),
+                DB::raw('SUM(amount) as total_amount')
+            )
+            ->where('payable_type', 'App\\Models\\Package')
+            ->where('payable_id', $package->id)
+            ->completed()
+            ->whereBetween('paid_at', [$weekStart, $weekEnd])
+            ->groupBy(DB::raw('DAYOFWEEK(paid_at)'))
+            ->get();
+
+        foreach ($weeklyPayments as $payment) {
+            $privateWeeklyData[$payment->day - 1] += (int) $payment->total_amount;
+        }
+
+        $privateTotalRevenue += $totalRevenue;
+        $privateTotalRevenueYearly += $yearlyRevenue;
     }
+
+    // Add combined private package revenue under "Private Package"
+    if ($privateTotalRevenue > 0) {
+        $totalRevenueByPackage[] = [
+            'name' => 'Private Package',
+            'total_revenue' => $privateTotalRevenue
+        ];
+    }
+
+    if ($privateTotalRevenueYearly > 0) {
+        $totalRevenueByPackageYearly[] = [
+            'name' => 'Private Package',
+            'total_revenue_yearly' => $privateTotalRevenueYearly
+        ];
+    }
+
+    if (array_sum($privateWeeklyData) > 0) {
+        $totalRevenueByPackageWeekly[] = [
+            'name' => 'Private Package',
+            'data' => $privateWeeklyData
+        ];
+    }
+
+    // Handle empty array for max function
+    $maxMonthlyRevenue = !empty($totalRevenueByPackage) ? max(array_column($totalRevenueByPackage, 'total_revenue')) : 0;
+    $maxWeeklyRevenue = !empty($totalRevenueByPackageWeekly) ? max(array_map(fn($item) => max($item['data']), $totalRevenueByPackageWeekly)) : 0;
 
     return [
         'monthly_package_revenue' => $monthlyResult,
@@ -107,6 +166,8 @@ function getPackageRevenueData($year = null, $week = 'current')
         'weekly_package_revenue_max' => getDynamicMaxValue($maxWeeklyRevenue),
     ];
 }
+
+
 
 
 
