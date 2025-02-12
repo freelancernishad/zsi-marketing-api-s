@@ -71,9 +71,9 @@ class StripeController extends Controller
             // Verify the webhook signature
             // $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
             $event = json_decode($payload);
-            Log::info($event);
+            Log::info($event->type);
 
-
+return $event;
             // Handle the event
             switch ($event->type) {
                 case 'checkout.session.completed':
