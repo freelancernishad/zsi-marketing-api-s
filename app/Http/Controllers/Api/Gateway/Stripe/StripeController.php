@@ -70,8 +70,10 @@ class StripeController extends Controller
         try {
             // Verify the webhook signature
             // $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
+            Log::info("payload =>" .$payload);
+
             $event = json_decode($payload);
-            Log::info($event['type']);
+            Log::info("type =>" .$event->type);
 
 return $event;
             // Handle the event
