@@ -70,29 +70,10 @@ class StripeController extends Controller
         try {
             // Verify the webhook signature
             // $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
-       // Log the raw payload for debugging
-       Log::info("Payload: " . $payload);
+            $event = json_decode($payload);
 
-       // Decode the JSON payload
-       $event = json_decode($payload);
-   
-       // Check if json_decode failed
-       if (json_last_error() !== JSON_ERROR_NONE) {
-           // Log the error message and return an error response
-           Log::error("JSON decode error: " . json_last_error_msg());
-           return response()->json(['error' => 'Invalid JSON payload'], 400);
-       }
-   
-       // Check if $event is an object and has the type property
-       if (is_object($event) && isset($event->type)) {
-           Log::info("Event Type: " . $event->type);
-       } else {
-           // Log if the event type is not found or if $event is not an object
-           Log::error("Event is not an object or type property is missing.");
-           return response()->json(['error' => 'Invalid event data'], 400);
-       }
 
-return $event;
+
             // Handle the event
             switch ($event->type) {
                 case 'checkout.session.completed':
