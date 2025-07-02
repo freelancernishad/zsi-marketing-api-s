@@ -20,6 +20,7 @@ class CareersJob extends Model
         'category',
         'employment_type',
         'experience_level',
+        'years_of_experience', 
         'salary_type',
         'salary',
         'office_time',

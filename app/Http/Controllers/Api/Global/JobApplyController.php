@@ -22,6 +22,8 @@ class JobApplyController extends Controller
             'email' => 'required|email',
             'phone' => 'required|string|max:20',
             'cover_letter' => 'nullable|string',
+            'experience_level' => 'nullable|string',
+            'years_of_experience' => 'nullable|string',
             'resume' => 'required|file|mimes:pdf,doc,docx,jpeg,png,jpg',
         ]);
 
@@ -48,7 +50,7 @@ class JobApplyController extends Controller
         $validatedData['expiry_date'] = $careersJob->expiry_date;
         $validatedData['category'] = $careersJob->category;
         $validatedData['employment_type'] = $careersJob->employment_type;
-        $validatedData['experience_level'] = $careersJob->experience_level;
+        // $validatedData['experience_level'] = $careersJob->experience_level;
         $validatedData['salary_type'] = $careersJob->salary_type;
         $validatedData['salary'] = $careersJob->salary;
         $validatedData['office_time'] = $careersJob->office_time;
