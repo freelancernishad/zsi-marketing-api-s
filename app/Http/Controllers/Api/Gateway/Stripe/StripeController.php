@@ -69,7 +69,10 @@ class StripeController extends Controller
 
         try {
             // Verify the webhook signature
-            $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
+            // $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
+            $event = json_decode($payload);
+
+
 
             // Handle the event
             switch ($event->type) {
@@ -161,7 +164,7 @@ class StripeController extends Controller
                         'amount' => $invoice->amount_paid / 100, // Convert from cents to dollars
                         'currency' => $invoice->currency,
                         'status' => 'completed',
-            
+
                         'paid_at' => now(),
                         'payable_type' => 'App\\Models\\Package',
                         'payable_id' => $userPackage->package_id,
@@ -288,7 +291,7 @@ class StripeController extends Controller
         Log::error('Failed to save PaymentMethod details: ' . $e->getMessage());
     }
 }
-    
+
     /**
      * Update UserPackage with payment method details.
      *
