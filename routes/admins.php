@@ -102,6 +102,7 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::post('/', [AdminPackageController::class, 'store']);
         Route::put('/{id}', [AdminPackageController::class, 'update']);
         Route::delete('/{id}', [AdminPackageController::class, 'destroy']);
+        Route::post('/manual-purchase', [AdminPackageController::class, 'manualPackagePurchase']);
     });
 
     // Package Addons

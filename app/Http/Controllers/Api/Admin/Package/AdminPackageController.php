@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api\Admin\Package;
 
+use App\Models\User;
 use App\Models\Package;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use App\Models\PackageDiscount;
+use App\Models\UserPackageAddon;
 use App\Http\Controllers\Controller;
 use App\Models\CustomPackageRequest;
 
@@ -174,5 +177,78 @@ public function store(Request $request)
         $package->delete();
 
         return response()->json(['message' => 'Package deleted successfully']);
+    }
+
+    /**
+     * Manually purchase/activate a package for a user (e.g., hand cash).
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function manualPackagePurchase(Request $request)
+    {
+        $rules = [
+            'user_id' => 'required|exists:users,id',
+            'package_id' => 'required|exists:packages,id',
+            'amount' => 'required|numeric|min:0',
+            'business_name' => 'nullable|string|max:255',
+            'discount_months' => 'nullable|integer|min:0',
+            'addon_ids' => 'nullable|array',
+            'addon_ids.*' => 'exists:package_addons,id',
+        ];
+
+        $validationResponse = validateRequest($request->all(), $rules);
+        if ($validationResponse) {
+            return $validationResponse;
+        }
+
+        $userId = $request->user_id;
+        $packageId = $request->package_id;
+        $amount = $request->amount;
+        $business_name = $request->business_name;
+        $addonIds = $request->addon_ids ?? [];
+
+        // 1. Create UserPackage record using helper
+        // Note: PackageSubscribe handles UserPackage record creation and linking addons
+        // But it expects UserPackageAddon to exist if it's going to link them.
+        
+        // Ensure addons are created if provided
+        if (!empty($addonIds)) {
+            foreach ($addonIds as $addonId) {
+                UserPackageAddon::create([
+                    'user_id' => $userId,
+                    'package_id' => $packageId,
+                    'addon_id' => $addonId,
+                    'purchase_id' => null, // Will be updated by PackageSubscribe
+                ]);
+            }
+        }
+
+        // Activate the package
+        $userPackageId = PackageSubscribe($packageId, $userId, $business_name);
+
+        if (is_null($userPackageId)) {
+            return response()->json(['error' => 'Failed to activate package.'], 500);
+        }
+
+        // 2. Create Payment record
+        $payment = Payment::create([
+            'user_id' => $userId,
+            'gateway' => 'hand cash',
+            'amount' => $amount,
+            'currency' => 'USD', // Default or could be dynamic
+            'status' => 'completed',
+            'paid_at' => now(),
+            'user_package_id' => $userPackageId,
+            'payable_type' => 'App\\Models\\Package',
+            'payable_id' => $packageId,
+            'business_name' => $business_name,
+        ]);
+
+        return response()->json([
+            'message' => 'Package manually activated successfully.',
+            'user_package_id' => $userPackageId,
+            'payment_id' => $payment->id
+        ], 200);
     }
 }
