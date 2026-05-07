@@ -61,7 +61,7 @@
         </div>
         <div class="footer">
             <p>If you did not create an account, no further action is required.</p>
-            <p>Thank you,<br>Zsi Marketing</p>
+            <p>Thank you,<br>ZSI Marketing</p>
         </div>
     </div>
 </body>

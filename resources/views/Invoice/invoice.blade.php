@@ -179,7 +179,7 @@
 
                 <td class="company-column">
                     <h3></h3>
-                    <span>Zsi Marketing</span><br>
+                    <span>ZSI Marketing</span><br>
                     <span>marketing@zsi.ai</span><br>
                     <span>74-09 37th Avenue</span><br>
                     <span>Suite 2038, Jackson Heights</span><br>
