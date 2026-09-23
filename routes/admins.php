@@ -168,7 +168,7 @@ Route::prefix('admin')->middleware(AuthenticateAdmin::class)->group(function () 
         Route::get('/', [ArticlesController::class, 'index']);
         Route::post('/', [ArticlesController::class, 'store']);
         Route::get('{id}', [ArticlesController::class, 'show']);
-        Route::post('{id}', [ArticlesController::class, 'update']);
+        Route::match(['post', 'put'], '{id}', [ArticlesController::class, 'update']);
         Route::delete('{id}', [ArticlesController::class, 'destroy']);
 
         // Add or remove categories to/from articles

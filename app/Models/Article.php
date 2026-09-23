@@ -15,6 +15,15 @@ class Article extends Model
         'content',
         'banner_image',
         'status',
+        'excerpt',
+        'author',
+        'date',
+        'readTime',
+        'keyTakeaways',
+    ];
+
+    protected $casts = [
+        'keyTakeaways' => 'array',
     ];
 
 

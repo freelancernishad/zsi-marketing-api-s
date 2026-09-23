@@ -29,15 +29,40 @@ class ArticlesController extends Controller
             'slug' => 'required|string|unique:articles,slug',
             'content' => 'required|string',
             'category_ids' => 'required|array|exists:categories,id',
-            'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate the banner image
+            'banner_image' => $request->hasFile('banner_image') ? 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120' : 'nullable',
+            'image' => $request->hasFile('image') ? 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120' : 'nullable',
+            'excerpt' => 'nullable|string',
+            'author' => 'nullable|string',
+            'date' => 'nullable',
+            'readTime' => 'nullable|string',
+            'keyTakeaways' => 'nullable',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        $keyTakeaways = $request->input('keyTakeaways');
+        if (is_string($keyTakeaways)) {
+            $keyTakeaways = json_decode($keyTakeaways, true) ?? [$keyTakeaways];
+        }
+
+        $data = $request->only([
+            'title',
+            'slug',
+            'content',
+            'excerpt',
+            'author',
+            'date',
+            'readTime',
+        ]);
+
+        if (!empty($keyTakeaways)) {
+            $data['keyTakeaways'] = array_values((array) $keyTakeaways);
+        }
+
         // Create the article
-        $article = Article::create($request->only(['title', 'slug', 'content']));
+        $article = Article::create($data);
 
         // Attach the selected categories to the article
         $article->categories()->attach($request->category_ids);
@@ -45,9 +70,11 @@ class ArticlesController extends Controller
         // Handle the banner image upload if provided
         if ($request->hasFile('banner_image')) {
             $article->saveBannerImage($request->file('banner_image'));
+        } elseif ($request->hasFile('image')) {
+            $article->saveBannerImage($request->file('image'));
         }
 
-        return response()->json(['message' => 'Article created successfully', 'article' => $article], 201);
+        return response()->json(['message' => 'Article created successfully', 'article' => $article->load('categories')], 201);
     }
 
     /**
@@ -74,7 +101,13 @@ class ArticlesController extends Controller
             'slug' => 'required|string|unique:articles,slug,' . $id,
             'content' => 'required|string',
             'category_ids' => 'required|array|exists:categories,id',
-            'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate the banner image
+            'banner_image' => $request->hasFile('banner_image') ? 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120' : 'nullable',
+            'image' => $request->hasFile('image') ? 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120' : 'nullable',
+            'excerpt' => 'nullable|string',
+            'author' => 'nullable|string',
+            'date' => 'nullable',
+            'readTime' => 'nullable|string',
+            'keyTakeaways' => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -87,8 +120,27 @@ class ArticlesController extends Controller
             return response()->json(['message' => 'Article not found'], 404);
         }
 
+        $keyTakeaways = $request->input('keyTakeaways');
+        if (is_string($keyTakeaways)) {
+            $keyTakeaways = json_decode($keyTakeaways, true) ?? [$keyTakeaways];
+        }
+
+        $data = $request->only([
+            'title',
+            'slug',
+            'content',
+            'excerpt',
+            'author',
+            'date',
+            'readTime',
+        ]);
+
+        if ($keyTakeaways !== null) {
+            $data['keyTakeaways'] = array_values((array) $keyTakeaways);
+        }
+
         // Update the article
-        $article->update($request->only(['title', 'slug', 'content']));
+        $article->update($data);
 
         // Sync the categories (replace all old categories)
         $article->categories()->sync($request->category_ids);
@@ -96,9 +148,11 @@ class ArticlesController extends Controller
         // Handle the banner image upload if provided
         if ($request->hasFile('banner_image')) {
             $article->saveBannerImage($request->file('banner_image'));
+        } elseif ($request->hasFile('image')) {
+            $article->saveBannerImage($request->file('image'));
         }
 
-        return response()->json(['message' => 'Article updated successfully', 'article' => $article], 200);
+        return response()->json(['message' => 'Article updated successfully', 'article' => $article->load('categories')], 200);
     }
 
     /**
