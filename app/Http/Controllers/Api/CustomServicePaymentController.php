@@ -94,8 +94,8 @@ class CustomServicePaymentController extends Controller
                 'mode' => $isRecurring ? 'subscription' : 'payment',
                 'customer_email' => $validated['customer_email'],
                 'line_items' => [$lineItem],
-                'success_url' => "{$origin}/custom-payment?session_id={CHECKOUT_SESSION_ID}&success=true",
-                'cancel_url' => "{$origin}/custom-payment?canceled=true",
+                'success_url' => "{$origin}/quick-payment?session_id={CHECKOUT_SESSION_ID}&success=true",
+                'cancel_url' => "{$origin}/quick-payment?canceled=true",
                 'metadata' => [
                     'customer_name' => $validated['customer_name'],
                     'customer_phone' => $validated['customer_phone'] ?? '',
