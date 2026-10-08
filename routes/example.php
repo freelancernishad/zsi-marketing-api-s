@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\Api\CustomServicePaymentController;
 
 /**
  * Upload a file to the specified disk ('protected' or 's3').
@@ -52,3 +53,8 @@ Route::get('/read-file/{filename}', function ($filename) {
         ], 404);
     }
 });
+
+/**
+ * Custom Service Payment route
+ */
+Route::post('/custom-service-payment', [CustomServicePaymentController::class, 'store']);
